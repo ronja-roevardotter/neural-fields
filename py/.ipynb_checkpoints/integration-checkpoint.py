@@ -67,7 +67,6 @@ def runIntegration(params, fp=np.array([0.0, 0.01]), itype='int_fft',):
     ui_init[0]=np.random.uniform(init_inh[0], init_inh[1], n)
     
     
-    
     integrate = globals()[itype]
     
     ue, ui =  integrate(mtype,
@@ -101,42 +100,57 @@ def inte_fft(mtype,
     def Fi(x):
         return 1/(1+np.exp(-beta_i*(x-mu_i)))
     
-    ve = np.fft.fft(np.copy(ue[0]))
-    vi = np.fft.fft(np.copy(ui[0]))
+    d_max = max(delay)
     
-    for t in range(1,int(len(time))): #kann das -1 hier und oben nicht weg? 
+    ke_fft = np.fft.fft(ke)
+    ki_fft = np.fft.fft(ki)
+    
+    for t in range(1,int(len(time))): 
         
-        if mtype == 'activity':
-            Le = ke_fft * ve
-            Li = ki_fft * vi
+        #indeces for delays - makes the delayed time steps easier to call
+        indeces = np.array([t*np.ones(n)-delay]).astype(int)
+        
+        if mtype=='activity':
+            if t<=d_max+1:
+                ve = np.fft.fft(ue[t-1])
+                vi = np.fft.fft(ui[t-1])
+            else:
+                temp_e = ue[indeces,0]
+                temp_i = ui[indeces,0]
+                ve = np.fft.fft(temp_e)[0]
+                vi = np.fft.fft(temp_i)[0]
         else:
-            Le = ke_fft * Fe(ve)
-            Li = ki_fft * Fi(vi)
+            ve = np.fft.fft(Fe(ue[t-1]))
+            vi = np.fft.fft(Fi(ui[t-1]))
         
-        Le = np.fft.ifft(Le)
-        Li = np.fft.ifft(Li)
+        Le = ke_fft * ve
+        Li = ki_fft * vi
         
-        conv_e = Le.real
-        conv_i = Li.real
+        conv_e = np.fft.ifft(Le).real
+        conv_i = np.fft.ifft(Li).real
         
         
         #determine the RHS before integrating over it w.r.t. time t
         if mtype=='activity':
             rhs_e = ((1/tau_e)*(-ue[t-1] + Fe(w_ee*conv_e - w_ei*conv_i + I_e)))
-        
             rhs_i = ((1/tau_i)*(-ui[t-1] + Fi(w_ie*conv_e - w_ii*conv_i + I_i)))
         else:
             rhs_e = ((1/tau_e)*(-ue[t-1] + w_ee*conv_e - w_ei*conv_i + I_e))
-        
             rhs_i = ((1/tau_i)*(-ui[t-1] + w_ie*conv_e - w_ii*conv_i + I_i))
         
         
         #integrate with euler integration
-        ue[t] = ue[t-1] + (dt * rhs_e) #u_e[t-1] + (self.md.variables.dt * rhs_e)
-        ui[t] = ui[t-1] + (dt * rhs_i) #u_i[t-1] + (self.md.variables.dt * rhs_i)
+        ue[t] = ue[t-1] + (dt * rhs_e)
+        ui[t] = ui[t-1] + (dt * rhs_i)
         
-        v_e = np.fft.fft(np.copy(ue[t]))
-        v_i = np.fft.fft(np.copy(ui[t]))
+        
+        print('# # - - NEW ROUND - - # #')
+        print('t: ', t)
+        print('ue: ', ue)
+        
+        print('ve: ', ve)
+        print('ke_fft: ', ke_fft)
+        
     
     return ue, ui
 
@@ -179,8 +193,6 @@ def inte_approxi(mtype,
             if t<=d_max+1:
                 
                 for j in range(n):
-                   # print('kernel=%s and shape=%s: ' %((str(ke[j]),str(ke[j].shape))))
-                   # print('ue=%s and shape=%s: ' %((str(ue),str(ue.shape))))
                     L_e[j] = (ke_mtx[j] @ ue[t-1])
                     L_i[j] = (ki_mtx[j] @ ui[t-1])
             else:
@@ -200,7 +212,6 @@ def inte_approxi(mtype,
                     temp_i = ui[t-delay_mtx[j], indices]
                     L_e[j] = ke_mtx[j] @ Fe(temp_e)
                     L_i[j] = ki_mtx[j] @ Fi(temp_i)
-                    
             
         conv_e = L_e
         conv_i = L_i
@@ -218,5 +229,15 @@ def inte_approxi(mtype,
         #integrate with euler integration
         ue[t] = ue[t-1] + (dt * rhs_e)
         ui[t] = ui[t-1] + (dt * rhs_i)
+        
+        
+        print('# # - - NEW ROUND - - # #')
+        print('t: ', t)
+        
+        print('conv_e: ', conv_e)
+        print('ke_mtx: ', ke_mtx)
+        print('ue: ', ue)
+        if all(conv_e==ue[t-1]):
+            print('approximation by convolution is the exact same as activity one step before. does that make sense? I dont think so')
         
     return ue, ui

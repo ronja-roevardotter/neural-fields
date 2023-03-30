@@ -114,7 +114,7 @@ def setSpace(params, shift=False):
 
     if params.n%2==0:
         x2 = x1[1:-1]
-        x2 = -x2[::-1]
+        x2 = x2[::-1]
         x = np.concatenate((x1,x2))
     else:
         dxx = dx/2
@@ -153,6 +153,8 @@ def ringValues(params):
     #normalisation & consideration of integration step s.t. we don't have to consider that anymore later.
     ke *= (params.dx/alpha_e) 
     ki *= (params.dx/alpha_i)
+    
+    print('Summe von ke, bereits normalisiert, also sollte 1 sein', np.sum(ke))
     
     return ke, ki
 
