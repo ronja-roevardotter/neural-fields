@@ -216,16 +216,4 @@ def checkFixPtsStability(fixed_points, params):
         else: 
             stability.append(0)
     return stability
-                    
-
-
-def runAll():
-    #generates the fixed_points-list of all fixed points
-    computeFPs() #has no input, since all necessary parameters are set in __init__()
-
-    checkFixPtsStability(fixed_points) #generates the stability list with 1 for stable 0 otherwise
-    
-    if sum(stability)==2:
-        fixed_points = np.sort(fixed_points, axis=0)
-        bistable = True
 

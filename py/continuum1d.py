@@ -53,7 +53,7 @@ class continuum1d:
         :n: number of pixels on ring, integer
         :length: length of total circumference of ring, float 
                  (remark: max. distance from pixel to furthest away can bi maximally length/2)
-        :c: velocity of activity in [m/s], float
+        :c: velocity of activity in [m/s], float -> transformed into mm/s in py.params.setParams()
         
         created by given params:
         :x: array of distances from one pixel to all other pixels (same distances to left and right, omit boundary effects), array

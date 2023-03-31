@@ -14,7 +14,7 @@ def exponential(sigma, x):
     return (1/(2*sigma))*np.exp(-np.abs(x)/sigma) #np.sqrt(x*x))
 
 def gaussian(sigma, x):
-    return (1/2*(sigma))*np.exp(-0.5*((x**2)/(sigma**2)*np.pi))  #1/(np.pi*(sigma**2))*np.exp(-0.5*(x/sigma)**2)
+    return (1/2*(sigma))*np.exp(-0.5*((x**2)/((sigma**2)*np.pi)))  #1/(np.pi*(sigma**2))*np.exp(-0.5*(x/sigma)**2)
 
 
 #Let's call it Wizard-Hat instead of Mexican-hat for multiple good reasons.
