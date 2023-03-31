@@ -1,7 +1,7 @@
 import numpy as np
 
 
-def runIntegration(params, fp=np.array([0.0, 0.01]), itype='int_fft',):
+def runIntegration(params, fp=np.array([0.0, 0.01]), itype='inte_fft',):
     
     """
     Before we can run the integration-loop, we have to set the parameters and call the integration by them 

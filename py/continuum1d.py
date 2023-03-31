@@ -8,7 +8,7 @@ import os
 
 class continuum1d:
     
-    def __init__(self, params):
+    def __init__(self):
         
         """
             

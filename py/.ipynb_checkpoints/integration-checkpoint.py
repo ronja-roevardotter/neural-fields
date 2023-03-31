@@ -1,7 +1,7 @@
 import numpy as np
 
 
-def runIntegration(params, fp=np.array([0.0, 0.01]), itype='int_fft',):
+def runIntegration(params, fp=np.array([0.0, 0.01]), itype='inte_fft',):
     
     """
     Before we can run the integration-loop, we have to set the parameters and call the integration by them 
@@ -144,12 +144,12 @@ def inte_fft(mtype,
         ui[t] = ui[t-1] + (dt * rhs_i)
         
         
-        print('# # - - NEW ROUND - - # #')
-        print('t: ', t)
-        print('ue: ', ue)
+  #      print('# # - - NEW ROUND - - # #')
+  #      print('t: ', t)
+  #      print('ue: ', ue)
         
-        print('ve: ', ve)
-        print('ke_fft: ', ke_fft)
+  #      print('ve: ', ve)
+  #      print('ke_fft: ', ke_fft)
         
     
     return ue, ui
@@ -231,12 +231,12 @@ def inte_approxi(mtype,
         ui[t] = ui[t-1] + (dt * rhs_i)
         
         
-        print('# # - - NEW ROUND - - # #')
-        print('t: ', t)
+    #    print('# # - - NEW ROUND - - # #')
+    #    print('t: ', t)
         
-        print('conv_e: ', conv_e)
-        print('ke_mtx: ', ke_mtx)
-        print('ue: ', ue)
+    #    print('conv_e: ', conv_e)
+    #    print('ke_mtx: ', ke_mtx)
+    #    print('ue: ', ue)
         if all(conv_e==ue[t-1]):
             print('approximation by convolution is the exact same as activity one step before. does that make sense? I dont think so')
         
