@@ -111,7 +111,7 @@ def inte_fft(mtype,
         indeces = np.array([t*np.ones(n)-delay]).astype(int)
         
         if mtype=='activity':
-            if t<=len(time):#d_max+1:
+            if t<=d_max+1:
                 ve = np.fft.fft(ue[t-1])
                 vi = np.fft.fft(ui[t-1])
             else:
@@ -190,7 +190,7 @@ def inte_approxi(mtype,
         L_i=np.zeros(n)
         
         if mtype=='activity':
-            if t<=len(time):#d_max+1:
+            if t<=d_max+1:
                 
                 for j in range(n):
                     L_e[j] = (ke_mtx[j] @ ue[t-1])

@@ -1,5 +1,7 @@
 import numpy as np
 
+import py.kernels as ks
+
 #import root and eigenvalue/-vector function
 from scipy.optimize import root
 from scipy.linalg import eigvals
@@ -167,8 +169,8 @@ def computeFPs(pDict):
 
     for i in np.linspace(start, end, 61):
         if params.mtype == 'activity':
-            sol = root(activity, [i, i], args=(params,), jac=activity_A, method='lm')
-            print('solution to root: ', sol.x)
+            sol = root(activity, [i, i], args=(params,), jac=activity_A, method='hybr')#, method='lm')
+          #  print('solution to root: ', sol.x)
         else:
           #  print('voltage(x): ', voltage([i,i]))
             sol = root(voltage, [i,i], args=(params,), jac=voltage_A, method='lm')
@@ -216,16 +218,104 @@ def checkFixPtsStability(fixed_points, params):
         else: 
             stability.append(0)
     return stability
-                    
 
 
-def runAll():
-    #generates the fixed_points-list of all fixed points
-    computeFPs() #has no input, since all necessary parameters are set in __init__()
+# # # # # # - - - - -                                               - - - - - # # # # # #
+# # # # # # - - - - - Functions for Turing Stability Analysis below - - - - - # # # # # #
+# # # # # # - - - - -                                               - - - - - # # # # # #
 
-    checkFixPtsStability(fixed_points) #generates the stability list with 1 for stable 0 otherwise
+def f_kernel(sigma, k, k_string='gaussian'):
     
-    if sum(stability)==2:
-        fixed_points = np.sort(fixed_points, axis=0)
-        bistable = True
+    kernel_func = getattr(ks, 'f_'+k_string)
+    
+    return kernel_func(sigma, k)
 
+
+
+def a_jkValues(fp, params):
+    
+    exc = fp[0]
+    inh = fp[1]
+    
+    if params.mtype=='activity':
+        b_e = params.w_ee*exc - params.w_ei*inh + params.I_e
+        b_i = params.w_ie*exc - params.w_ii*inh + params.I_i
+        
+        a_ee = params.w_ee * derivF_e(b_e, params)
+        a_ei = params.w_ei * derivF_e(b_e, params)
+        a_ie = params.w_ie * derivF_i(b_i, params)
+        a_ii = params.w_ii * derivF_i(b_i, params)
+        
+    else:
+        a_ee = params.w_ee * derivF_e(exc, params)
+        a_ei = params.w_ei * derivF_i(inh, params)
+        a_ie = params.w_ie * derivF_e(exc, params)
+        a_ii = params.w_ii * derivF_i(inh, params)
+        
+    return a_ee, a_ei, a_ie, a_ii
+
+
+        
+                    
+# # # - - - LINEARIZATION MATRIX - - - # # #
+        
+# # # - - - turing-linearization matrix - - - # # #
+#Since we already disinguish the types by
+#a_jk, the resulting linearization matrix is the same.
+
+def turing_A11(k, a_ee, params):
+    return (1/params.tau_e)*(-1 + a_ee*f_kernel(params.sigma_e, k, params.kernel))
+
+def turing_A12(k, a_ei, params):
+    return (1/params.tau_e)*(-a_ei)*f_kernel(params.sigma_i, k, params.kernel)
+
+def turing_A21(k, a_ie, params):
+    return (1/params.tau_i)*a_ie*f_kernel(params.sigma_e, k, params.kernel)
+
+def turing_A22(k, a_ii, params):
+    return (1/params.tau_i)*(-1 + (-a_ii)*f_kernel(params.sigma_i, k, params.kernel))
+
+def turing_A(k):
+    return [[turing_A11(k, a_ee, params), turing_A12(k, a_ei, params)],
+            [turing_A21(k, a_ie, params), turing_A22(k, a_ii, params)]]
+
+
+# # # - - - TRACE - - - # # #
+    
+def tr(k, a_ee, a_ii, params):
+    return turing_A11(k, a_ee, params) + turing_A22(k, a_ii, params)
+    
+    
+# # # - - - DETERMINANT - - - # # # 
+#NOTE: calling the wrong fps (voltage vs activity) can turn the determinante upside done
+def det(k, a_ee, a_ei, a_ie, a_ii, params):
+    
+    return (turing_A11(k, a_ee, params)*turing_A22(k, a_ii, params))-(turing_A12(k, a_ei, params)*turing_A21(k, a_ie, params))
+    
+    
+    
+# # # - - - the functions to test for turing instability - - - # # #
+
+def pos_det(a_ee, a_ei, a_ie, a_ii, params):
+    if det(0, a_ee, a_ei, a_ie, a_ii, params)>0:
+        return True
+    else: 
+        return False
+    
+def neg_tr(k, a_ee, a_ii, params):
+    if all(tr(k, a_ee, a_ii, params)<0):
+        return True
+    else:
+        return False
+    
+def det_traj(k, a_ee, a_ei, a_ie, a_ii, params):
+    if any(det(k, a_ee, a_ei, a_ie, a_ii, params)< -0.1**16):
+        return True
+    else:
+        return False
+    
+def lmbd(k_real, a_ee, a_ei, a_ie, a_ii, params):
+    k = k_real.astype(complex)
+    lmbd_plus = (1/2)*(tr(k, a_ee, a_ii, params) + np.sqrt(tr(k, a_ee, a_ii, params)**2 - 4*det(k, a_ee, a_ei, a_ie, a_ii, params)))
+    lmbd_minus = (1/2)*(tr(k, a_ee, a_ii, params) - np.sqrt(tr(k, a_ee, a_ii, params)**2 - 4*det(k, a_ee, a_ei, a_ie, a_ii, params)))
+    return [lmbd_plus, lmbd_minus]

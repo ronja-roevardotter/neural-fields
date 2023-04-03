@@ -14,31 +14,27 @@ def exponential(sigma, x):
     return (1/(2*sigma))*np.exp(-np.abs(x)/sigma) #np.sqrt(x*x))
 
 def gaussian(sigma, x):
-    return (1/2*(sigma))*np.exp(-0.5*((x**2)/((sigma**2)*np.pi)))  #1/(np.pi*(sigma**2))*np.exp(-0.5*(x/sigma)**2)
+    return (1/(2*(sigma**2)))*np.exp(-((x**2)/(2*(sigma**2))))  #1/(np.pi*(sigma**2))*np.exp(-0.5*(x/sigma)**2)
 
 
-#Let's call it Wizard-Hat instead of Mexican-hat for multiple good reasons.
-def wizard_hat(sigma, x):
-    return (1-(x/sigma)**2)*np.exp(-(x*x)/(2*(sigma**2)))
-
-
-# # # - - - kernels in Fourier domain - - - # # #
+# # # - - - kernels in Fourier domain - - - # # # EXPONENTOAL REQUIRES UPDATE ! ! !
 
 def f_exponential(sigma, k):
-    return (1/(np.sqrt(2*np.pi)))*(1/(1+((sigma**2)*(k**2))))#scale*(1/((alpha**2) + (k**2)))
+    return (1/(0.5+(2*(sigma**2)*(k**2)))) #scale*(1/((alpha**2) + (k**2)))
 
 def f_gaussian(sigma, k):
-    return  1/(2)*np.exp(-0.5*((k**2)*(sigma**2)))#1/(np.pi*(sigma**2))*sigma*np.exp(-((sigma*k)**2)/2)
+    return (np.sqrt(2*np.pi)/(2*sigma))*np.exp(-0.5*((k**2)*(sigma**2)))#1/(np.pi*(sigma**2))*sigma*np.exp(-((sigma*k)**2)/2)
 
-def f_wizard_hat(sigma, k):
-    #This Fourier transformation is still from the graph neural fields publication, I need to determine it another time.
-    return (k**2)*np.exp(-((sigma*k)**2)/2)
+
+#def f_gaussian(sigma, k):
+#    return  (np.sqrt(2*np.pi)/(2*sigma))*np.exp(-1/(2*(k**2)*(sigma**2)))
+
 
 
 # # # - - - derivatives of kernels - - - # # #
 
 
-# # # - - - derivatives of f_kernels - - - # # #
+# # # - - - derivatives of f_kernels - - - # # # UPDATE REQUIRED ! ! !
 
     
 def deriv_f_gaussian(sigma, k):
