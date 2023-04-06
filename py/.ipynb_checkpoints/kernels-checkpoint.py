@@ -14,11 +14,7 @@ def exponential(sigma, x):
     return (1/(2*sigma))*np.exp(-np.abs(x)/sigma) #np.sqrt(x*x))
 
 def gaussian(sigma, x):
-    a = 1/(2*sigma)
-    b = 0
-    c = sigma
-    alpha = (np.sqrt(2*np.pi)*a*c)
-    return (1/(np.sqrt(2*np.pi)*sigma))*np.exp(-(((x**2)-b)/(2*(c**2))))  #(1/(2*(sigma**2)))*np.exp(-((x**2)/(2*(sigma**2))))  #1/(np.pi*(sigma**2))*np.exp(-0.5*(x/sigma)**2)
+    return (1/(np.sqrt(2*np.pi)*sigma))*np.exp(-(((x**2))/(2*(sigma**2))))  #(1/(2*(sigma**2)))*np.exp(-((x**2)/(2*(sigma**2))))  #1/(np.pi*(sigma**2))*np.exp(-0.5*(x/sigma)**2)
 
 
 # # # - - - kernels in Fourier domain - - - # # # EXPONENTOAL REQUIRES UPDATE ! ! !

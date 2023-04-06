@@ -57,8 +57,8 @@ def runIntegration(params, fp=np.array([0.0, 0.01]), itype='inte_fft',):
         init_exc = fp
         init_inh = fp
     else:
-        init_exc = [fp[0]-0.1*(10**(-12)), fp[0]+0.1*(10**(-12))]
-        init_inh = [fp[1]-0.1*(10**(-12)), fp[1]+0.1*(10**(-12))]
+        init_exc = [fp[0]-0.1*(10**(-8)), fp[0]+0.1*(10**(-8))]
+        init_inh = [fp[1]-0.1*(10**(-8)), fp[1]+0.1*(10**(-8))]
     
     #the initialisation I have to make to start the integration
     ue_init = np.zeros((len(time),n)) #leads to [rows, columns] = [time, pixels (space)]
