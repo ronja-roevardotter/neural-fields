@@ -195,6 +195,9 @@ def computeFPs(pDict):
                         pass #skip the already derived fixed points
                     else:
                         fixed_points.append(sol.x)
+                        
+    fixed_points = np.sort(fixed_points, axis=0)
+    
     return fixed_points
 
 #function to determine the stability of fixed points, depending on the fixed points AND model-type
@@ -202,7 +205,7 @@ def computeFPs(pDict):
                     
 def checkFixPtsStability(fixed_points, params):
     
-    fixed_points = np.sort(fixed_points, axis=0)
+    # fixed_points = np.sort(fixed_points, axis=0)
     stability = []
     for i in range(len(fixed_points)):
         ue0 = fixed_points[i][0]
@@ -223,6 +226,7 @@ def checkFixPtsStability(fixed_points, params):
 # # # # # # - - - - -                                               - - - - - # # # # # #
 # # # # # # - - - - - Functions for Turing Stability Analysis below - - - - - # # # # # #
 # # # # # # - - - - -                                               - - - - - # # # # # #
+
 
 def f_kernel(sigma, k, k_string='gaussian'):
     

@@ -14,7 +14,11 @@ def exponential(sigma, x):
     return (1/(2*sigma))*np.exp(-np.abs(x)/sigma) #np.sqrt(x*x))
 
 def gaussian(sigma, x):
-    return (1/(2*(sigma**2)))*np.exp(-((x**2)/(2*(sigma**2))))  #1/(np.pi*(sigma**2))*np.exp(-0.5*(x/sigma)**2)
+    a = 1/(2*sigma)
+    b = 0
+    c = sigma
+    alpha = (np.sqrt(2*np.pi)*a*c)
+    return (1/(np.sqrt(2*np.pi)*sigma))*np.exp(-(((x**2)-b)/(2*(c**2))))  #(1/(2*(sigma**2)))*np.exp(-((x**2)/(2*(sigma**2))))  #1/(np.pi*(sigma**2))*np.exp(-0.5*(x/sigma)**2)
 
 
 # # # - - - kernels in Fourier domain - - - # # # EXPONENTOAL REQUIRES UPDATE ! ! !
@@ -23,7 +27,11 @@ def f_exponential(sigma, k):
     return (1/(0.5+(2*(sigma**2)*(k**2)))) #scale*(1/((alpha**2) + (k**2)))
 
 def f_gaussian(sigma, k):
-    return (np.sqrt(2*np.pi)/(2*sigma))*np.exp(-0.5*((k**2)*(sigma**2)))#1/(np.pi*(sigma**2))*sigma*np.exp(-((sigma*k)**2)/2)
+    return np.exp(-(1/2) * (sigma**2) * (k**2) )
+
+#def f_gaussian(sigma, k):
+#    print('Using fourier transformation of gaussian: f_gaussian')
+#    return (np.sqrt(2/np.pi)/(2*sigma))*np.exp(-0.5*((k**2)*(sigma**2)))#1/(np.pi*(sigma**2))*sigma*np.exp(-((sigma*k)**2)/2)
 
 
 #def f_gaussian(sigma, k):

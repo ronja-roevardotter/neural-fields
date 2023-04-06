@@ -151,12 +151,15 @@ def ringValues(params):
     alpha_i = np.sum(ki)*params.dx #normalisation factor for inh
     
     #normalisation & consideration of integration step s.t. we don't have to consider that anymore later.
-    ke *= (params.dx/alpha_e) 
-    ki *= (params.dx/alpha_i)
+    ke *= params.dx #(params.dx/alpha_e) 
+    ki *= params.dx #(params.dx/alpha_i)
     
-    print('Summe von ke, bereits normalisiert, also sollte 1 sein', np.sum(ke))
+    fourier_func = getattr(ks, 'f_' + params.kernel)
     
-    return ke, ki
+    ke_fft = (1/np.sqrt(2*np.pi)) * fourier_func(params.sigma_e, params.x)
+    ki_fft = (1/np.sqrt(2*np.pi)) * fourier_func(params.sigma_i, params.x)
+    
+    return ke, ki, ke_fft, ki_fft
 
 def setDelay(params):
     """ 
@@ -192,22 +195,22 @@ def setParams(pDict):
                 
     #To make sure, that I do NOT reconnect nodes with themselves again, I need a constraint on my spatial spread.
     #Maximum spread can be the distance to the node furthest away (in a ring that would be max(l/2))
-    if params.sigma_e >= params.length/2:
-        temp = params.sigma_e
-        params.sigma_e = params.sigma_e/(params.length/2)
-        print('sigma_e=%.2f was initialised too large %.2f>=%.2f==length/2 -> reset to sigma_e/length=%.2f.' 
-              %(temp, temp, params.length/2, params.sigma_e))
-    elif params.sigma_i >= params.length/2:
-        temp = params.sigma_i
-        params.sigma_i = params.sigma_i/(params.length/2)
-        print('sigma_i=%.2f was initialised too large %.2f>=%.2f==length/2 -> reset to sigma_i/(length/2)=%.2f.' 
-              %(temp, temp, params.length/2, params.sigma_i))
+#    if params.sigma_e >= params.length/2:
+#        temp = params.sigma_e
+#        params.sigma_e = params.sigma_e/(params.length/2)
+#        print('sigma_e=%.2f was initialised too large %.2f>=%.2f==length/2 -> reset to sigma_e/length=%.2f.' 
+#              %(temp, temp, params.length/2, params.sigma_e))
+#    elif params.sigma_i >= params.length/2:
+#        temp = params.sigma_i
+#        params.sigma_i = params.sigma_i/(params.length/2)
+#        print('sigma_i=%.2f was initialised too large %.2f>=%.2f==length/2 -> reset to sigma_i/(length/2)=%.2f.' 
+#              %(temp, temp, params.length/2, params.sigma_i))
         
     params.time = setTime(params)
     
     params.x, params.dx = setSpace(params, shift=False)
     
-    params.ke, params.ki = ringValues(params)
+    params.ke, params.ki, params.ke_fft, params.ki_fft = ringValues(params)
     
     params.ke_fft = np.fft.fft(params.ke)
     params.ki_fft = np.fft.fft(params.ki)

@@ -57,8 +57,8 @@ def runIntegration(params, fp=np.array([0.0, 0.01]), itype='inte_fft',):
         init_exc = fp
         init_inh = fp
     else:
-        init_exc = [fp[0]-0.1*(10**(-6)), fp[0]+0.1*(10**(-6))]
-        init_inh = [fp[1]-0.1*(10**(-6)), fp[1]+0.1*(10**(-6))]
+        init_exc = [fp[0]-0.1*(10**(-12)), fp[0]+0.1*(10**(-12))]
+        init_inh = [fp[1]-0.1*(10**(-12)), fp[1]+0.1*(10**(-12))]
     
     #the initialisation I have to make to start the integration
     ue_init = np.zeros((len(time),n)) #leads to [rows, columns] = [time, pixels (space)]
@@ -111,7 +111,7 @@ def inte_fft(mtype,
         indeces = np.array([t*np.ones(n)-delay]).astype(int)
         
         if mtype=='activity':
-            if t<=d_max+1:
+            if t<=len(time): #d_max+1:
                 ve = np.fft.fft(ue[t-1])
                 vi = np.fft.fft(ui[t-1])
             else:
@@ -190,7 +190,7 @@ def inte_approxi(mtype,
         L_i=np.zeros(n)
         
         if mtype=='activity':
-            if t<=d_max+1:
+            if t<=len(time): #d_max+1:
                 
                 for j in range(n):
                     L_e[j] = (ke_mtx[j] @ ue[t-1])
