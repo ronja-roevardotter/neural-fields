@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 
 from py.params import setParams
 from py.analysis import computeFPs, checkFixPtsStability, a_jkValues
@@ -26,7 +27,6 @@ def checkTuringStability(det, tr):
     return turing
 
 
-
 # # # # # # # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - # # # # # # # # #
 # # # - - - - - - - naive Ansatz to collect information about stability, turing stability and pattern type - - - - - - - # # #
 # # # # # # # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - # # # # # # # # #
@@ -49,15 +49,20 @@ def collectStabilities(params=None, vary_params={'I_e': np.linspace(1,5,21), 'I_
     
     var1_str, var1 = list(vary_params.items())[0]
     var2_str, var2 = list(vary_params.items())[1]
-    var2 = var2[::-1]
+ #   var2 = var2[::-1]
     
     print(type(var1_str), type(var1))
+    
+    df_columns=[var1_str, var2_str, 'fixed_points', 'stability', 'turing_stabilities', 'patterns']
+    df_columns=[var1_str, var2_str, 'fp1', 'stab1', 't_stab1', 'p1', 
+                                    'fp2', 'stab2', 't_stab2', 'p2', 
+                                    'fp3', 'stab3', 't_stab3', 'p3']
+    df = pd.DataFrame(columns=df_columns)
     
     nn = len(var1)
     mm = len(var2)
     
     mass_bifs = np.zeros((nn,mm))
-    turing_bifs = np.zeros((nn,mm))
     pattern_mtx = np.zeros((nn,mm))
     
     for i in range(nn):
@@ -67,50 +72,71 @@ def collectStabilities(params=None, vary_params={'I_e': np.linspace(1,5,21), 'I_
             
             ps = setParams(params)
             fps = computeFPs(ps)
-            stab = checkFixPtsStability(fps, ps)
+            fps_for_later = fps
             
-            if sum(stab) == 2:
+            stab = checkFixPtsStability(fps, ps)
+            stab_for_later = stab
+            
+            if len(fps)==1:
+                if fps[0][0] <=0.4:
+                    fps = np.array([fps[0], None, None])
+                    stab = np.array([stab[0], None, None])
+                    trng_stab = np.array([0, None, None])
+                    patterns = np.array([0, None, None])
+                else:
+                    fps = np.array([None, None, fps[0]])
+                    stab = np.array([None, None, stab[0]])
+                    trng_stab = np.array([None, None, 0])
+                    patterns = np.array([None, None, 0])
+            elif len(fps)==2:
+                fps = np.array([fps[0], None, fps[-1]])
+                stab = np.array([stab[0], None, stab[-1]])
+                trng_stab = np.array([0, None, 0])
+                patterns = np.array([0, None, 0])
+            else:
+                trng_stab = np.array([0, 0, 0])
+                patterns = np.array([0, 0, 0])
+            
+            
+            if sum(stab_for_later) == 2:
                 mass_bifs[i,j] = 1
                 l=61
                 k = np.linspace(-2,2,l)
-                a_ee, a_ei, a_ie, a_ii = a_jkValues(fps[0], ps)
+                a_ee, a_ei, a_ie, a_ii = a_jkValues(fps_for_later[0], ps)
                 determinant1 = det(k, a_ee, a_ei, a_ie, a_ii, ps)
                 trace1 = tr(k, a_ee, a_ii, ps)
-                turing1 = checkTuringStability(determinant1, trace1)
-                a_ee, a_ei, a_ie, a_ii = a_jkValues(fps[-1], ps)
+                trng_stab[0] = checkTuringStability(determinant1, trace1)
+                a_ee, a_ei, a_ie, a_ii = a_jkValues(fps_for_later[-1], ps)
                 determinant2 = det(k, a_ee, a_ei, a_ie, a_ii, ps)
                 trace2 = tr(k, a_ee, a_ii, ps)
-                turing2 = checkTuringStability(determinant1, trace1)
-                turing_bifs[i,j]=max(turing1, turing2)
-            elif sum(stab) == 1:
+                trng_stab[-1] = checkTuringStability(determinant2, trace2)
+            elif sum(stab_for_later) == 1:
                 mass_bifs[i,j] = 0.5
                 l=61
                 k = np.linspace(-2,2,l)
-                a_ee, a_ei, a_ie, a_ii = a_jkValues(fps[list(stab).index(1)], ps)
+                a_ee, a_ei, a_ie, a_ii = a_jkValues(fps_for_later[list(stab_for_later).index(1)], ps)
                 determinant = det(k, a_ee, a_ei, a_ie, a_ii, ps)
                 trace = tr(k, a_ee, a_ii, ps)
-                turing = checkTuringStability(determinant, trace)
-                turing_bifs[i,j]=turing
+                trng_stab[list(stab).index(1)] = checkTuringStability(determinant, trace)
             else:
                 mass_bifs[i,j] = 0
                 
             
-            patterns = np.zeros(len(fps))
-            for idx, fp in enumerate(fps):
-                p, a,b,c,d = collectPatterns(fp, ps, last_sec=10)
+            for idx, fp in enumerate(fps_for_later):
+                p, a,b,c,d = collectPatterns(fp, ps, last_sec=100)
                 patterns[idx] = p
             
-            if len(patterns)==0:
-                pattern_mtx[i,j] = -1
-            elif all(x == patterns[0] for x in patterns):
-                pattern_mtx[i,j] = patterns[0]
-            else:
-                pattern_mtx[i,j] = 5
+            
+            values = [[var1[i], var2[j], fps[0], stab[0], trng_stab[0], patterns[0],
+                                         fps[1], stab[1], trng_stab[1], patterns[1],
+                                         fps[2], stab[2], trng_stab[2], patterns[2]]]
+            df_temp = pd.DataFrame(values, columns=df_columns)
+            df = pd.concat([df, df_temp])
                 
             
       #      print('We are in round I_e = %f, I_i = %f, i=%i, j=%i with pattern %s' %(var1[i],var2[j],i,j, str(patterns)))
     
-    return mass_bifs, turing_bifs, pattern_mtx
+    return mass_bifs, df
 
 
 
