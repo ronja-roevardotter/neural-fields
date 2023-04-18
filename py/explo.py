@@ -52,8 +52,6 @@ def collectStabilities(params=None, vary_params={'I_e': np.linspace(1,5,21), 'I_
  #   var2 = var2[::-1]
     
     print(type(var1_str), type(var1))
-    
-    df_columns=[var1_str, var2_str, 'fixed_points', 'stability', 'turing_stabilities', 'patterns']
     df_columns=[var1_str, var2_str, 'fp1', 'stab1', 't_stab1', 'p1', 
                                     'fp2', 'stab2', 't_stab2', 'p2', 
                                     'fp3', 'stab3', 't_stab3', 'p3']
@@ -79,23 +77,29 @@ def collectStabilities(params=None, vary_params={'I_e': np.linspace(1,5,21), 'I_
             
             if len(fps)==1:
                 if fps[0][0] <=0.4:
-                    fps = np.array([fps[0], None, None])
-                    stab = np.array([stab[0], None, None])
-                    trng_stab = np.array([0, None, None])
-                    patterns = np.array([0, None, None])
+                    fps = np.array([fps[0], None, None], dtype='object')
+                    stab = np.array([stab[0], None, None], dtype='object')
+                    trng_stab = np.array([0, None, None], dtype='object')
+                    patterns = np.array([0, None, None], dtype='object')
                 else:
-                    fps = np.array([None, None, fps[0]])
-                    stab = np.array([None, None, stab[0]])
-                    trng_stab = np.array([None, None, 0])
-                    patterns = np.array([None, None, 0])
+                    fps = np.array([None, None, fps[0]], dtype='object')
+                    stab = np.array([None, None, stab[0]], dtype='object')
+                    trng_stab = np.array([None, None, 0], dtype='object')
+                    patterns = np.array([None, None, 0], dtype='object')
             elif len(fps)==2:
-                fps = np.array([fps[0], None, fps[-1]])
-                stab = np.array([stab[0], None, stab[-1]])
-                trng_stab = np.array([0, None, 0])
-                patterns = np.array([0, None, 0])
-            else:
+                fps = np.array([fps[0], None, fps[-1]], dtype='object')
+                stab = np.array([stab[0], None, stab[-1]], dtype='object')
+                trng_stab = np.array([0, None, 0], dtype='object')
+                patterns = np.array([0, None, 0], dtype='object')
+            elif len(fps)==3:
                 trng_stab = np.array([0, 0, 0])
                 patterns = np.array([0, 0, 0])
+            else:
+                fps = np.array([None, None, None], dtype='object')
+                stab = np.array([None, None, None], dtype='object')
+                trng_stab = np.array([None, None, None], dtype='object')
+                patterns = np.array([None, None, None], dtype='object')
+                
             
             
             if sum(stab_for_later) == 2:
@@ -134,7 +138,8 @@ def collectStabilities(params=None, vary_params={'I_e': np.linspace(1,5,21), 'I_
             df = pd.concat([df, df_temp])
                 
             
-      #      print('We are in round I_e = %f, I_i = %f, i=%i, j=%i with pattern %s' %(var1[i],var2[j],i,j, str(patterns)))
+            print('We are in round I_e = %f, I_i = %f, i=%i, j=%i with pattern %s' %(var1[i],var2[j],i,j, str(patterns)))
+    print('df: ', df)
     
     return mass_bifs, df
 
@@ -213,6 +218,87 @@ def collectPatterns(fp, params, last_sec=100):
         
  #   print('In pattern collection, pattern: ', pattern)
         
-    return pattern, Pxx_den_time, f_time, Pxx_den_spatial, f_space
+    return pattern #, Pxx_den_time, f_time, Pxx_den_spatial, f_space
+
+
+def collectStabilities2(params=None, vary_params={'I_e': np.linspace(1,5,21), 'I_i': np.linspace(0,4,21)}, pattern_analysis=False):
+    
+    """
+    This functions returns collected information on the fixed points:
+    stability: type of stability. Options are: 0 (Hopf instability); 1 (1 stable fixed points); 2 (two stable fixed points)
+    turing: checks the turing-stability for stable fixed points. 0 (all remain stable);  1 (at least one is turing unstable)
+    p_random: emerging pattern, if randomly initialised
+    p_turing: emerging pattern, if initialised in turing-unstable fixed point
+    
+    To have the origin of both varied params, transpose each matrix. 
+    """
+    
+    var1_str, var1 = list(vary_params.items())[0]
+    var2_str, var2 = list(vary_params.items())[1]
+ #   var2 = var2[::-1]
+    
+    print(type(var1_str), type(var1))
+    df_columns=[var1_str, var2_str, 'stability', 'turing', 'p_random', 'p_turing']
+    df = pd.DataFrame(columns=df_columns)
+    
+    nn = len(var1)
+    mm = len(var2)
+    
+    for i in range(nn):
+        for j in range(mm):
+            params[var1_str] = var1[i]
+            params[var2_str] = var2[j]
+            
+            ps = setParams(params)
+            fps = computeFPs(ps)
+            stab = checkFixPtsStability(fps, ps)
+            
+            p_turing = 0
+            turing = 0
+            
+            if sum(stab) == 2:
+                stability = 2
+                l=61
+                k = np.linspace(-2,2,l)
+                a_ee, a_ei, a_ie, a_ii = a_jkValues(fps[0], ps)
+                d1 = det(k, a_ee, a_ei, a_ie, a_ii, ps)
+                t1 = tr(k, a_ee, a_ii, ps)
+                trng1 = checkTuringStability(d1, t1)
+                a_ee, a_ei, a_ie, a_ii = a_jkValues(fps[-1], ps)
+                d2 = det(k, a_ee, a_ei, a_ie, a_ii, ps)
+                t2 = tr(k, a_ee, a_ii, ps)
+                trng2 = checkTuringStability(d2, t2)
+                turing = max(trng1, trng2)
+                if trng1 == 1:
+                    p_turing = collectPatterns(fps[0], ps, last_sec=100)
+                elif trng2 == 1:
+                    p_turing = collectPatterns(fps[-1], ps, last_sec=100)
+            elif sum(stab) == 1:
+                stability = 1
+                l=61
+                k = np.linspace(-2,2,l)
+                a_ee, a_ei, a_ie, a_ii = a_jkValues(fps[list(stab).index(1)], ps)
+                d = det(k, a_ee, a_ei, a_ie, a_ii, ps)
+                t = tr(k, a_ee, a_ii, ps)
+                turing = checkTuringStability(d, t)
+                if turing:
+                    p_turing = collectPatterns(fps[list(stab).index(1)], ps, last_sec=100)
+            else:
+                stability = 0
+                
+            
+            p_random = collectPatterns(np.array([0.0, 0.01]), ps, last_sec=100)
+            
+            
+            
+            values = [[var1[i], var2[j], stability, turing, p_random, p_turing]]
+            df_temp = pd.DataFrame(values, columns=df_columns)
+            df = pd.concat([df, df_temp])
+                
+            
+            print('We are in round I_e = %f, I_i = %f, i=%i, j=%i with random pattern %s' %(var1[i],var2[j],i,j, str(p_random)))
+    print('df: ', df)
+    
+    return df
 
 
