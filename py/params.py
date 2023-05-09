@@ -37,8 +37,8 @@ def defaultParams():
     params.mtype = 'activity'
     
     #membrane time constants [no units yet]
-    params.tau_e = 2.5
-    params.tau_i = 3.75
+    params.tau_e = 1.0 #2.5 
+    params.tau_i = 1.5 #3.75
     
     #coupling weights (determining the dominant type of cells, e.g. locally excitatory...)
     params.w_ee = 16 #excitatory to excitatory
@@ -49,8 +49,8 @@ def defaultParams():
     #threshold and gain factors for the sigmoidal activation functions 
     params.beta_e = 1 #excitatory gain
     params.beta_i = 1 #inhibitory gain
-    params.mu_e = 5 #excitatory threshold
-    params.mu_i = 5 #inhibitory threshold
+    params.mu_e = 0 #excitatory threshold
+    params.mu_i = 0 #inhibitory threshold
     
     #Write seperate function for setting the parameters of the coupling function w(x), but set the function type:
     params.kernel = 'gaussian' #else choosable: exponential,...

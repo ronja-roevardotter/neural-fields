@@ -52,10 +52,10 @@ def inverseF_i(y, params):
 def activity_ui(ue, params):
     """Returns the excitatory nullcline w.r.t. ue (\frac{due}{dt}=0)
        for the activity-based model"""
-    inside = (params.w_ee * ue + params.I_e- inverseF_e(ue, params))
-    return (1/params.w_ei) * inside
+    inside = (-params.w_ee * ue - params.I_e + inverseF_e(ue, params))
+    return -(1/params.w_ei) * inside
 
-def activity_u_e(ui, params):
+def activity_ue(ui, params):
     """Returns the inhibitory nullcline w.r.t. ui (\frac{ui}{dt}=0)
        for the activity-based model"""
     inside = (inverseF_i(ui, params) + params.w_ii * ui - params.I_i)
@@ -234,6 +234,11 @@ def f_kernel(sigma, k, k_string='gaussian'):
     
     return kernel_func(sigma, k)
 
+def deriv_f_kernel(sigma, k, k_string='gaussian'):
+    
+    kernel_func = getattr(ks, 'deriv_f_'+k_string)
+    
+    return kernel_func(sigma, k)
 
 
 def a_jkValues(fp, params):
@@ -288,6 +293,9 @@ def turing_A(k):
     
 def tr(k, a_ee, a_ii, params):
     return turing_A11(k, a_ee, params) + turing_A22(k, a_ii, params)
+
+def dtr(k, a_ee, a_ii, params):
+    return (1/params.tau_e)*a_ee*deriv_f_kernel(params.sigma_e, k, params.kernel)-(1/params.tau_i)*a_ii*deriv_f_kernel(params.sigma_i, k, params.kernel)
     
     
 # # # - - - DETERMINANT - - - # # # 
@@ -323,3 +331,26 @@ def lmbd(k_real, a_ee, a_ei, a_ie, a_ii, params):
     lmbd_plus = (1/2)*(tr(k, a_ee, a_ii, params) + np.sqrt(tr(k, a_ee, a_ii, params)**2 - 4*det(k, a_ee, a_ei, a_ie, a_ii, params)))
     lmbd_minus = (1/2)*(tr(k, a_ee, a_ii, params) - np.sqrt(tr(k, a_ee, a_ii, params)**2 - 4*det(k, a_ee, a_ei, a_ie, a_ii, params)))
     return [lmbd_plus, lmbd_minus]
+
+
+
+    
+# # # - - - the functions to check Turing instability and check possibility of spatiotemporal patterns - - - # # #
+
+def Turing_Hopf(k, a_ee, a_ii, a_ei, a_ie, params):
+    for k_in in k:
+        sol1 = root(tr, k_in, args=(a_ee, a_ii, params), method='hybr')
+        sol2 = root(dtr, k_in, args=(a_ee, a_ii, params), method='hybr')
+    if sol1.success:
+        trace_root = True
+    else:
+        trace_root = False
+    if sol2.success:
+        deriv_trace = True
+    else:
+        deriv_trace = False
+        
+    determ = pos_det(a_ee, a_ei, a_ie, a_ii, params)
+    
+    return trace_root, deriv_trace, determ
+        

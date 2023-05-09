@@ -25,27 +25,15 @@ def f_exponential(sigma, k):
 def f_gaussian(sigma, k):
     return np.exp(-(1/2) * (sigma**2) * (k**2) )
 
-#def f_gaussian(sigma, k):
-#    print('Using fourier transformation of gaussian: f_gaussian')
-#    return (np.sqrt(2/np.pi)/(2*sigma))*np.exp(-0.5*((k**2)*(sigma**2)))#1/(np.pi*(sigma**2))*sigma*np.exp(-((sigma*k)**2)/2)
-
-
-#def f_gaussian(sigma, k):
-#    return  (np.sqrt(2*np.pi)/(2*sigma))*np.exp(-1/(2*(k**2)*(sigma**2)))
-
 
 
 # # # - - - derivatives of kernels - - - # # #
 
+def deriv_gaussian(sigma, x):
+    return -(x/(np.sqrt(2*np.pi)*sigma**3))*np.exp(-(((x**2))/(2*(sigma**2))))
 
 # # # - - - derivatives of f_kernels - - - # # # UPDATE REQUIRED ! ! !
 
     
 def deriv_f_gaussian(sigma, k):
-    return -(sigma**3)*k*np.exp(-(1/2)*(sigma**2)*(k**2))
-
-def deriv_f_exponential(sigma, k):
-    scale = 1/(2*sigma)
-    alpha = 1/sigma
-    #determined with wolfram-alpha
-    return -((2*scale*sigma)/(sigma*k**2+alpha)**2)
+    return -(sigma**2)*k*np.exp(-(1/2)*(sigma**2)*(k**2))

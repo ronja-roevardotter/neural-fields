@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 
 from py.params import setParams
-from py.analysis import computeFPs, checkFixPtsStability, a_jkValues
+from py.analysis import computeFPs, checkFixPtsStability, a_jkValues, Turing_Hopf
 from py.analysis import tr, det, lmbd
 
 from py.funcs import getAvgPSD
@@ -238,7 +238,7 @@ def collectStabilities2(params=None, vary_params={'I_e': np.linspace(1,5,21), 'I
  #   var2 = var2[::-1]
     
     print(type(var1_str), type(var1))
-    df_columns=[var1_str, var2_str, 'stability', 'turing', 'p_random', 'p_turing']
+    df_columns=[var1_str, var2_str, 'stability', 'turing', 'turing_hopf', 'p_random', 'p_turing']
     df = pd.DataFrame(columns=df_columns)
     
     nn = len(var1)
@@ -255,6 +255,7 @@ def collectStabilities2(params=None, vary_params={'I_e': np.linspace(1,5,21), 'I
             
             p_turing = 0
             turing = 0
+            turing_hopf=0
             
             if sum(stab) == 2:
                 stability = 2
@@ -264,15 +265,19 @@ def collectStabilities2(params=None, vary_params={'I_e': np.linspace(1,5,21), 'I
                 d1 = det(k, a_ee, a_ei, a_ie, a_ii, ps)
                 t1 = tr(k, a_ee, a_ii, ps)
                 trng1 = checkTuringStability(d1, t1)
+                zero_trace1, zero_deriv_trace1, pos_determ1 = Turing_Hopf(k, a_ee, a_ii, a_ei, a_ie, ps)
                 a_ee, a_ei, a_ie, a_ii = a_jkValues(fps[-1], ps)
                 d2 = det(k, a_ee, a_ei, a_ie, a_ii, ps)
                 t2 = tr(k, a_ee, a_ii, ps)
                 trng2 = checkTuringStability(d2, t2)
+                zero_trace2, zero_deriv_trace2, pos_determ2 = Turing_Hopf(k, a_ee, a_ii, a_ei, a_ie, ps)
                 turing = max(trng1, trng2)
                 if trng1 == 1:
                     p_turing = collectPatterns(fps[0], ps, last_sec=100)
                 elif trng2 == 1:
                     p_turing = collectPatterns(fps[-1], ps, last_sec=100)
+                if all([zero_trace1, zero_deriv_trace1]) or all([zero_trace2, zero_deriv_trace2]): 
+                    turing_hopf = 1
             elif sum(stab) == 1:
                 stability = 1
                 l=61
@@ -281,17 +286,19 @@ def collectStabilities2(params=None, vary_params={'I_e': np.linspace(1,5,21), 'I
                 d = det(k, a_ee, a_ei, a_ie, a_ii, ps)
                 t = tr(k, a_ee, a_ii, ps)
                 turing = checkTuringStability(d, t)
+                zero_trace, zero_deriv_trace, pos_determ = Turing_Hopf(k, a_ee, a_ii, a_ei, a_ie, ps)
                 if turing:
                     p_turing = collectPatterns(fps[list(stab).index(1)], ps, last_sec=100)
+                if all([zero_trace, zero_deriv_trace]): 
+                    turing_hopf = 1
             else:
                 stability = 0
                 
             
-            p_random = collectPatterns(np.array([0.0, 0.01]), ps, last_sec=100)
+            p_random = collectPatterns(np.array([0.0, 0.01]), ps, last_sec=100)            
             
             
-            
-            values = [[var1[i], var2[j], stability, turing, p_random, p_turing]]
+            values = [[var1[i], var2[j], stability, turing, turing_hopf, p_random, p_turing]]
             df_temp = pd.DataFrame(values, columns=df_columns)
             df = pd.concat([df, df_temp])
                 
