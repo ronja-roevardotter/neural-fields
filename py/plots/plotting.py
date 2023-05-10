@@ -5,6 +5,9 @@ import pandas as pd
 import matplotlib.ticker as ticker
 from matplotlib import cm
 
+path = '/Users/ronja/opt/anaconda3/lib/python3.9/site-packages/matplotlib/mpl-data/stylelib/'
+plt.style.use(path + 'template.mplstyle')
+
 
 def plot2DiscreteMaps(df, xaxis='I_e', yaxis='I_i'):
     
@@ -16,16 +19,16 @@ def plot2DiscreteMaps(df, xaxis='I_e', yaxis='I_i'):
         
     p_turings = df.pivot_table('p_turing', columns=xaxis, index=yaxis)
     
-    fig, (ax1,ax2) = plt.subplots(1,2,figsize=(16,6),dpi=120)
+    fig, (ax1,ax2) = plt.subplots(1,2,figsize=(16,6))
 
     ax1.imshow(p_randoms, origin='lower', vmin=1, vmax=4, aspect='auto', cmap=p_colors)
-    ax1.contour(stabis, origin='lower', vmin=0, vmax=2, levels=1, cmap='YlGnBu', linewidths=3)
-    ax1.contour(turings, origin='lower', vmin=0, vmax=1, levels=0, colors='black', linewidths=3, linestyles='dashed')
+    ax1.contour(stabis, origin='lower', vmin=0, vmax=2, levels=1, cmap='YlGnBu')
+    ax1.contour(turings, origin='lower', vmin=0, vmax=1, levels=0, colors='black', linestyles='dashed')
     ax1.set(title='Random initialization')
 
     ax2.imshow(p_turings, origin='lower', vmin=1, vmax=4, aspect='auto', cmap=p_colors)
-    ax2.contour(stabis, origin='lower', vmin=0, vmax=2, levels=1, cmap='YlGnBu', linewidths=3)
-    ax2.contour(turings, origin='lower', vmin=0, vmax=1, levels=0, colors='black', linewidths=3, linestyles='dashed')
+    ax2.contour(stabis, origin='lower', vmin=0, vmax=2, levels=1, cmap='YlGnBu')
+    ax2.contour(turings, origin='lower', vmin=0, vmax=1, levels=0, colors='black', linestyles='dashed')
     ax2.set(title='Initialization in Turing unstable FP')
     
     
@@ -55,8 +58,8 @@ def plot2DiscreteMaps(df, xaxis='I_e', yaxis='I_i'):
         ax.yaxis.set_major_locator(ticker.LinearLocator(nmb_labels))
         ax.set_yticklabels(labels=ylabels, fontsize=20)
         
-        ax.set_xlabel(r'$%s$' %xaxis, fontsize=20)
-        ax.set_ylabel(r'$%s$' %yaxis, fontsize=20, labelpad=10, rotation=0)
+        ax.set_xlabel(r'$%s$' %xaxis)
+        ax.set_ylabel(r'$%s$' %yaxis, labelpad=10, rotation=0)
         
         ax.label_outer()
     
@@ -72,8 +75,8 @@ def plot2DiscreteMaps(df, xaxis='I_e', yaxis='I_i'):
     cbar.ax.set_yticklabels(cbar_labels)
         
         
-    plt.xticks(fontsize=20)
-    plt.yticks(fontsize=20)
+  #  plt.xticks(fontsize=20)
+  #  plt.yticks(fontsize=20)
     
     cbar.minorticks_on()
     

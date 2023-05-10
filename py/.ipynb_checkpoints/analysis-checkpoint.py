@@ -52,13 +52,13 @@ def inverseF_i(y, params):
 def activity_ui(ue, params):
     """Returns the excitatory nullcline w.r.t. ue (\frac{due}{dt}=0)
        for the activity-based model"""
-    inside = (-params.w_ee * ue - params.I_e + inverseF_e(ue, params))
-    return -(1/params.w_ei) * inside
+    inside = params.w_ee * ue + params.I_e - inverseF_e(ue, params)
+    return (1/params.w_ei) * inside
 
 def activity_ue(ui, params):
     """Returns the inhibitory nullcline w.r.t. ui (\frac{ui}{dt}=0)
        for the activity-based model"""
-    inside = (inverseF_i(ui, params) + params.w_ii * ui - params.I_i)
+    inside = inverseF_i(ui, params) + params.w_ii * ui - params.I_i
     return (1/params.w_ie) * inside
 
 
@@ -169,7 +169,7 @@ def computeFPs(pDict):
 
     for i in np.linspace(start, end, 61):
         if params.mtype == 'activity':
-            sol = root(activity, [i, i], args=(params,), jac=activity_A, method='hybr')#, method='lm')
+            sol = root(activity, [i, i], args=(params,), jac=activity_A, method='lm')#, method='lm')
           #  print('solution to root: ', sol.x)
         else:
           #  print('voltage(x): ', voltage([i,i]))
