@@ -41,14 +41,14 @@ def defaultParams():
     params.tau_i = 1.5 #3.75
     
     #coupling weights (determining the dominant type of cells, e.g. locally excitatory...)
-    params.w_ee = 16 #excitatory to excitatory
-    params.w_ei = 12 #inhibitory to excitatory
-    params.w_ie = 12 #excitatory to inhibitory
-    params.w_ii = 3 #inhibitory to inhibitory
+    params.w_ee = 3.1 #excitatory to excitatory
+    params.w_ei = 2.6 #inhibitory to excitatory
+    params.w_ie = 3.2 #excitatory to inhibitory
+    params.w_ii = 0.8 #inhibitory to inhibitory
     
     #threshold and gain factors for the sigmoidal activation functions 
-    params.beta_e = 1 #excitatory gain
-    params.beta_i = 1 #inhibitory gain
+    params.beta_e = 5 #excitatory gain
+    params.beta_i = 5 #inhibitory gain
     params.mu_e = 0 #excitatory threshold
     params.mu_i = 0 #inhibitory threshold
     
@@ -61,8 +61,8 @@ def defaultParams():
     
     
     #external input currents: oscillatory state for default params
-    params.I_e = 5.2 
-    params.I_i = 3.7
+    params.I_e = 0.0 
+    params.I_i = 0.0
 
     #temporal 
     #choose number of integration time step in seconds
@@ -77,7 +77,7 @@ def defaultParams():
     params.n = 128
     
     #choose spatial boundaries (intervals of spatial spread)
-    params.length = 10 #length of spatial component [for delay computations assumed to be in mm]
+    params.length = 50 #length of spatial component [for delay computations assumed to be in mm]
     
     params.c = 10 #m/s velocity of activity in m/s
     

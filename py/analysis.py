@@ -303,7 +303,14 @@ def dtr(k, a_ee, a_ii, params):
 def det(k, a_ee, a_ei, a_ie, a_ii, params):
     
     return (turing_A11(k, a_ee, params)*turing_A22(k, a_ii, params))-(turing_A12(k, a_ei, params)*turing_A21(k, a_ie, params))
-    
+
+def ddet(k, a_ee, a_ei, a_ie, a_ii, params):
+    return (- a_ii * deriv_f_kernel(params.sigma_i, k, params.kernel)
+            + a_ee * deriv_f_kernel(params.sigma_e, k, params.kernel)
+            - a_ee * a_ii * deriv_f_kernel(params.sigma_e, k, params.kernel) * f_kernel(params.sigma_i, k, params.kernel)
+            - a_ee * a_ii * f_kernel(params.sigma_e, k, params.kernel) * deriv_f_kernel(params.sigma_i, k, params.kernel)
+            + a_ei * a_ie * deriv_f_kernel(params.sigma_e, k, params.kernel) * f_kernel(params.sigma_i, k, params.kernel)
+            + a_ei * a_ie * f_kernel(params.sigma_e, k, params.kernel) * deriv_f_kernel(params.sigma_i, k, params.kernel))
     
     
 # # # - - - the functions to test for turing instability - - - # # #
@@ -337,7 +344,7 @@ def lmbd(k_real, a_ee, a_ei, a_ie, a_ii, params):
     
 # # # - - - the functions to check Turing instability and check possibility of spatiotemporal patterns - - - # # #
 
-def Turing_Hopf(k, a_ee, a_ii, a_ei, a_ie, params):
+def trace_Turing_Hopf(k, a_ee, a_ii, a_ei, a_ie, params):
     for k_in in k:
         sol1 = root(tr, k_in, args=(a_ee, a_ii, params), method='hybr')
         sol2 = root(dtr, k_in, args=(a_ee, a_ii, params), method='hybr')
@@ -354,3 +361,21 @@ def Turing_Hopf(k, a_ee, a_ii, a_ei, a_ie, params):
     
     return trace_root, deriv_trace, determ
         
+
+def determinant_Turing_Hopf(k, a_ee, a_ii, a_ei, a_ie, params):
+    for k_in in k:
+        sol1 = root(det, k_in, args=(a_ee, a_ei, a_ie, a_ii, params), method='hybr')
+        sol2 = root(ddet, k_in, args=(a_ee, a_ei, a_ie, a_ii, params), method='hybr')
+    if sol1.success:
+        det_root = True
+    else:
+        det_root = False
+    if sol2.success:
+        deriv_det = True
+    else:
+        deriv_det = False
+        
+    trace = neg_tr(k, a_ee, a_ii, params)
+    
+    return det_root, deriv_det, trace
+

@@ -8,6 +8,27 @@ from matplotlib import cm
 path = '/Users/ronja/opt/anaconda3/lib/python3.9/site-packages/matplotlib/mpl-data/stylelib/'
 plt.style.use(path + 'template.mplstyle')
 
+def setAxes(df, nmb):
+    
+    # Add minorticks on the colorbar to make it easy to read the
+    # values off the colorbar.
+    
+    nmb_labels = 5
+                
+    idx_x = np.linspace(0,len(df.columns.values)-1, nmb_labels).astype(int)
+    idx_y = np.linspace(0,len(df.index.values)-1, nmb_labels).astype(int)
+        
+    xliste= np.round(df.columns.values, decimals=2)[idx_x]
+    yliste= np.round(df.index.values, decimals=2)[idx_y]
+    
+    #xliste = np.linspace(xaxis[0],xaxis[-1],nmb_labels)
+    #yliste = np.linspace(yaxis[-1],yaxis[0],nmb_labels)
+    
+    xlabels=list('%.1f'%(e) for e in xliste)
+    ylabels=list('%.1f'%(e) for e in yliste)
+    
+    return xlabels, ylabels
+
 
 def plot2DiscreteMaps(df, xaxis='I_e', yaxis='I_i'):
     
@@ -135,3 +156,58 @@ def plotTraceDeterminant(xvalues, yvalues, k,
             count+=1
             
     plt.plot(k, zero, c='black')
+    
+def plotDiscreteMap(df, xaxis='I_e', yaxis='I_i', title='State space for default values'):
+    
+    path = '/Users/ronja/opt/anaconda3/lib/python3.9/site-packages/matplotlib/mpl-data/stylelib/'
+    plt.style.use(path + 'template.mplstyle')
+    
+    p_colors = cm.get_cmap('Accent', 4)
+    
+    stabis = df.pivot_table('stability', columns=xaxis, index=yaxis)
+    turings = df.pivot_table('turing', columns=xaxis, index=yaxis)
+    p_randoms = df.pivot_table('p_random', columns=xaxis, index=yaxis)
+    
+    fig, ax = plt.subplots(1,1,figsize=(10,8))
+    
+    pos = ax.imshow(p_randoms, origin='lower', vmin=1, vmax=4, aspect='auto', cmap=p_colors)
+    ax.contour(stabis, origin='lower', vmin=0, vmax=2, levels=1, cmap='YlGnBu')
+    ax.contour(turings, origin='lower', vmin=0, vmax=1, levels=0, colors='black', linestyles='dashed')
+    
+    ax.set(title=title)
+    
+    
+    # Add minorticks on the colorbar to make it easy to read the
+    # values off the colorbar.
+    
+    nmb_labels = 5
+                
+    xlabels, ylabels = setAxes(stabis, nmb_labels)
+    
+    ax.xaxis.set_major_locator(ticker.LinearLocator(nmb_labels))
+    ax.set_xticklabels(labels=xlabels)
+    ax.yaxis.set_major_locator(ticker.LinearLocator(nmb_labels))
+    ax.set_yticklabels(labels=ylabels)
+    
+    ax.set_xlabel(r'$%s$' %xaxis)
+    ax.set_ylabel(r'$%s$' %yaxis, labelpad=10, rotation=0)
+    
+    ax.label_outer()
+    
+    mini = 1
+    maxi = 4
+    cbar_ticks=np.linspace(mini,maxi,4)
+    cbar_ticks=np.around(cbar_ticks, decimals=0)
+    cbar_labels=['stat', 'temp', 'spat', 'spatiotemp']
+    
+    # Create colorbar
+    cbar = ax.figure.colorbar(pos, ax=ax, ticks=cbar_ticks)
+    cbar.ax.set_ylabel('pattern-type', rotation=-90, va="bottom")
+    cbar.ax.set_yticklabels(cbar_labels, rotation=-90)
+        
+    plt.legend(loc='lower right')
+        
+    cbar.minorticks_on()
+    
+    
+    plt.show()
