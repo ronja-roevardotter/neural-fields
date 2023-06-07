@@ -8,6 +8,8 @@ from matplotlib import cm
 path = '/Users/ronja/opt/anaconda3/lib/python3.9/site-packages/matplotlib/mpl-data/stylelib/'
 plt.style.use(path + 'template.mplstyle')
 
+
+
 def setAxes(df, nmb):
     
     # Add minorticks on the colorbar to make it easy to read the
@@ -157,7 +159,8 @@ def plotTraceDeterminant(xvalues, yvalues, k,
             
     plt.plot(k, zero, c='black')
     
-def plotDiscreteMap(df, xaxis='I_e', yaxis='I_i', title='State space for default values', colorbar=True):
+def plotDiscreteMap(df, xaxis='I_e', yaxis='I_i', scatter=False,
+                    title='State space for default values', colorbar=True):
     
     path = '/Users/ronja/opt/anaconda3/lib/python3.9/site-packages/matplotlib/mpl-data/stylelib/'
     plt.style.use(path + 'template.mplstyle')
@@ -170,19 +173,30 @@ def plotDiscreteMap(df, xaxis='I_e', yaxis='I_i', title='State space for default
     
     fig, ax = plt.subplots(1,1,figsize=(8,8))
     
-    pos = ax.imshow(p_randoms, origin='lower', vmin=1, vmax=4, aspect='auto', cmap=p_colors)
-    ax.contour(stabis, origin='lower', vmin=0, vmax=2, levels=1, cmap='YlGnBu')
-    ax.contour(turings, origin='lower', vmin=0, vmax=1, levels=0, colors='black', linestyles='dashed')
     
-    ax.set(title=title)
-    
-    
-    # Add minorticks on the colorbar to make it easy to read the
-    # values off the colorbar.
     
     nmb_labels = 5
                 
     xlabels, ylabels = setAxes(stabis, nmb_labels)
+    
+    pos = ax.imshow(p_randoms, origin='lower', vmin=1, vmax=4, aspect='auto', cmap=p_colors)
+    ax.contour(stabis, origin='lower', vmin=0, vmax=2, levels=1, cmap='YlGnBu')
+    ax.contour(turings, origin='lower', vmin=0, vmax=1, levels=0, colors='black', linestyles='dashed')
+    
+    
+    ax.set(title=title)
+    
+    
+    
+    if scatter:
+        scatter0 = stabis.columns.values.flat[np.abs(stabis.columns.values - scatter[0]).argmin()]#findNearest(stabis.index.values, scatter[0])
+        scatter1 = stabis.index.values.flat[np.abs(stabis.index.values - scatter[1]).argmin()] #findNearest(stabis.index.values, scatter[1])
+        xnodes = np.linspace(0, len(stabis.columns.values)-1, len(stabis.columns.values))
+        ynodes = np.linspace(0, len(stabis.index.values)-1, len(stabis.index.values))
+        ax.scatter(xnodes[list(stabis.columns.values).index(scatter0)], ynodes[list(stabis.index.values).index(scatter1)], s=150, c='yellow', marker='*', zorder=2) 
+        
+    # Add minorticks on the colorbar to make it easy to read the
+    # values off the colorbar.
     
     ax.xaxis.set_major_locator(ticker.LinearLocator(nmb_labels))
     ax.set_xticklabels(labels=xlabels)
@@ -209,6 +223,8 @@ def plotDiscreteMap(df, xaxis='I_e', yaxis='I_i', title='State space for default
         
         
         cbar.minorticks_on()
+        
+    
         
     plt.legend(loc='lower right')
     
