@@ -157,7 +157,7 @@ def plotTraceDeterminant(xvalues, yvalues, k,
             
     plt.plot(k, zero, c='black')
     
-def plotDiscreteMap(df, xaxis='I_e', yaxis='I_i', title='State space for default values'):
+def plotDiscreteMap(df, xaxis='I_e', yaxis='I_i', title='State space for default values', colorbar=True):
     
     path = '/Users/ronja/opt/anaconda3/lib/python3.9/site-packages/matplotlib/mpl-data/stylelib/'
     plt.style.use(path + 'template.mplstyle')
@@ -168,7 +168,7 @@ def plotDiscreteMap(df, xaxis='I_e', yaxis='I_i', title='State space for default
     turings = df.pivot_table('turing', columns=xaxis, index=yaxis)
     p_randoms = df.pivot_table('p_random', columns=xaxis, index=yaxis)
     
-    fig, ax = plt.subplots(1,1,figsize=(10,8))
+    fig, ax = plt.subplots(1,1,figsize=(8,8))
     
     pos = ax.imshow(p_randoms, origin='lower', vmin=1, vmax=4, aspect='auto', cmap=p_colors)
     ax.contour(stabis, origin='lower', vmin=0, vmax=2, levels=1, cmap='YlGnBu')
@@ -200,14 +200,18 @@ def plotDiscreteMap(df, xaxis='I_e', yaxis='I_i', title='State space for default
     cbar_ticks=np.around(cbar_ticks, decimals=0)
     cbar_labels=['stat', 'temp', 'spat', 'spatiotemp']
     
-    # Create colorbar
-    cbar = ax.figure.colorbar(pos, ax=ax, ticks=cbar_ticks)
-    cbar.ax.set_ylabel('pattern-type', rotation=-90, va="bottom")
-    cbar.ax.set_yticklabels(cbar_labels, rotation=-90)
+    if colorbar:
+        # Create colorbar
+        cb_ax = fig.add_axes([.93,.126,.04,.754])
+        cbar = ax.figure.colorbar(pos, ax=ax, ticks=cbar_ticks, cax=cb_ax)
+        cbar.ax.set_ylabel('pattern-type', rotation=-90, va="bottom")
+        cbar.ax.set_yticklabels(cbar_labels, rotation=-90)
+        
+        
+        cbar.minorticks_on()
         
     plt.legend(loc='lower right')
-        
-    cbar.minorticks_on()
+    
     
     
     plt.show()

@@ -41,10 +41,10 @@ def defaultParams():
     params.tau_i = 1.5 #3.75
     
     #coupling weights (determining the dominant type of cells, e.g. locally excitatory...)
-    params.w_ee = 3.1 #excitatory to excitatory
+    params.w_ee = 3.2 #excitatory to excitatory
     params.w_ei = 2.6 #inhibitory to excitatory
-    params.w_ie = 3.2 #excitatory to inhibitory
-    params.w_ii = 0.8 #inhibitory to inhibitory
+    params.w_ie = 3.3 #excitatory to inhibitory
+    params.w_ii = 0.9 #inhibitory to inhibitory
     
     #threshold and gain factors for the sigmoidal activation functions 
     params.beta_e = 5 #excitatory gain
