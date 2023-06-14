@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 
 from py.params import setParams
-from py.analysis import computeFPs, checkFixPtsStability, a_jkValues, determinant_Turing_Hopf
+from py.analysis import computeFPs, checkFixPtsStability, a_jkValues, violationType
 from py.analysis import tr, det, lmbd
 
 from py.funcs import getAvgPSD
@@ -240,7 +240,7 @@ def collectStabilities2(params=None, vary_params={'I_e': np.linspace(1,5,21), 'I
  #   var2 = var2[::-1]
     
     print(type(var1_str), type(var1))
-    df_columns=[var1_str, var2_str, 'stability', 'turing', 'turing_hopf', 'p_random']#, 'p_turing']
+    df_columns=[var1_str, var2_str, 'stability', 'turing', 'p_random', 'p_down']
     df = pd.DataFrame(columns=df_columns)
     
     nn = len(var1)
@@ -255,52 +255,35 @@ def collectStabilities2(params=None, vary_params={'I_e': np.linspace(1,5,21), 'I
             fps = computeFPs(ps)
             stab = checkFixPtsStability(fps, ps)
             
-         #   p_turing = 0
-            turing = 0
-            turing_hopf=0
+            violation = 0
             
             if sum(stab) == 2:
                 stability = 2
                 l=41
                 k = np.linspace(-2,2,l)
                 a_ee, a_ei, a_ie, a_ii = a_jkValues(fps[0], ps)
-                d1 = det(k, a_ee, a_ei, a_ie, a_ii, ps)
-                t1 = tr(k, a_ee, a_ii, ps)
-                trng1 = checkTuringStability(d1, t1)
-            #    zero_det1, zero_deriv_det1, pos_trace1 = determinant_Turing_Hopf(k, a_ee, a_ii, a_ei, a_ie, ps)
+                vio1 = violationType(k, a_ee, a_ei, a_ie, a_ii, ps)
                 a_ee, a_ei, a_ie, a_ii = a_jkValues(fps[-1], ps)
-                d2 = det(k, a_ee, a_ei, a_ie, a_ii, ps)
-                t2 = tr(k, a_ee, a_ii, ps)
-                trng2 = checkTuringStability(d2, t2)
-            #    zero_det2, zero_deriv_det2, pos_trace2 = determinant_Turing_Hopf(k, a_ee, a_ii, a_ei, a_ie, ps)
-                turing = max(trng1, trng2)
-            #    if trng1 == 1:
-            #        p_turing = collectPatterns(fps[0], ps, last_sec=100)
-            #    elif trng2 == 1:
-            #        p_turing = collectPatterns(fps[-1], ps, last_sec=100)
-            #    if all([zero_det1, zero_deriv_det1]) or all([zero_det2, zero_deriv_det2]): 
-            #        turing_hopf = 1
+                vio2 = violationType(k, a_ee, a_ei, a_ie, a_ii, ps)
+                violation = max(vio1, vio2)
             elif sum(stab) == 1:
                 stability = 1
                 l=41
                 k = np.linspace(-2,2,l)
                 a_ee, a_ei, a_ie, a_ii = a_jkValues(fps[list(stab).index(1)], ps)
-                d = det(k, a_ee, a_ei, a_ie, a_ii, ps)
-                t = tr(k, a_ee, a_ii, ps)
-                turing = checkTuringStability(d, t)
-           #     zero_det, zero_deriv_det, pos_trace = determinant_Turing_Hopf(k, a_ee, a_ii, a_ei, a_ie, ps)
-           #     if turing:
-           #         p_turing = collectPatterns(fps[list(stab).index(1)], ps, last_sec=100)
-           #     if all([zero_det, zero_deriv_det]): 
-           #         turing_hopf = 1
+                violation = violationType(k, a_ee, a_ei, a_ie, a_ii, ps)
             else:
                 stability = 0
                 
             
-            p_random = collectPatterns(np.array([0.0, 0.01]), ps, last_sec=100)            
+            p_random = collectPatterns(np.array([0.0, 0.01]), ps, last_sec=100) 
+            if np.any(fps):
+                p_down = collectPatterns(fps[0], ps, last_sec=100)  
+            else:
+                p_down = p_random
             
             
-            values = [[var1[i], var2[j], stability, turing, turing_hopf, p_random]]#, p_turing]]
+            values = [[var1[i], var2[j], stability, violation, p_random, p_down]]#, p_turing]]
             df_temp = pd.DataFrame(values, columns=df_columns)
             df = pd.concat([df, df_temp])
                 
@@ -310,10 +293,5 @@ def collectStabilities2(params=None, vary_params={'I_e': np.linspace(1,5,21), 'I
     
     return df
 
-
-# TO DO ! ! !
-#Write a function that one by one identifies the different stability types
-# 1. Locally linear stable
-# 2. Turing- & Turing-Hopf-Unstable
 
 

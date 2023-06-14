@@ -52,6 +52,18 @@ def defaultParams():
     params.mu_e = 0 #excitatory threshold
     params.mu_i = 0 #inhibitory threshold
     
+    # # - - adaptation parameters - - # #
+    
+    #transfer function
+    params.beta_a = 5
+    params.mu_a = 0
+    
+    #strength and time constant - to turn adaptation off: set b=0
+    params.b = 0.5
+    params.tau_a = 100
+    
+    # # - - - - # #
+    
     #Write seperate function for setting the parameters of the coupling function w(x), but set the function type:
     params.kernel = 'gaussian' #else choosable: exponential,...
 

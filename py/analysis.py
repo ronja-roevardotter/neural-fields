@@ -322,7 +322,7 @@ def pos_det(a_ee, a_ei, a_ie, a_ii, params):
         return False
     
 def neg_tr(k, a_ee, a_ii, params):
-    if all(tr(k, a_ee, a_ii, params)<0):
+    if all(tr(k, a_ee, a_ii, params)< -0.1**16):
         return True
     else:
         return False
@@ -344,38 +344,33 @@ def lmbd(k_real, a_ee, a_ei, a_ie, a_ii, params):
     
 # # # - - - the functions to check Turing instability and check possibility of spatiotemporal patterns - - - # # #
 
-def trace_Turing_Hopf(k, a_ee, a_ii, a_ei, a_ie, params):
-    for k_in in k:
-        sol1 = root(tr, k_in, args=(a_ee, a_ii, params), method='hybr')
-        sol2 = root(dtr, k_in, args=(a_ee, a_ii, params), method='hybr')
-    if sol1.success:
-        trace_root = True
-    else:
-        trace_root = False
-    if sol2.success:
-        deriv_trace = True
-    else:
-        deriv_trace = False
-        
-    determ = pos_det(a_ee, a_ei, a_ie, a_ii, params)
+def violationType(k, a_ee, a_ei, a_ie, a_ii, params):
     
-    return trace_root, deriv_trace, determ
+    """
+        This function checks with what condition of the linear stability analysis on a continuum is violated.
+        (i.e. run this check only for fixed points that are linearly stable in the local [i.e. one-node] system)
+        Options are: det(A(k)) > 0 is violated for a k0!=0 (i.e. det(A(k0))=0). Then we have a static Turing bifurcation point (i.e. spatial pattern). This is equivalent to im(\lambda)=0.
+                     tr(A(k))  < 0 is violated for a k0!=0 (i.e. tr(A(k0))=0). Then we speak of a dynamic Turing bifurcation point (i.e. spatiotemporal pattern)
+                     
+        Input:
+        :k: wavenumber (array)
+        :a_kj: Values necessary to determine det & tr
+        :params: parameter setting of model
         
-
-def determinant_Turing_Hopf(k, a_ee, a_ii, a_ei, a_ie, params):
-    for k_in in k:
-        sol1 = root(det, k_in, args=(a_ee, a_ei, a_ie, a_ii, params), method='hybr')
-        sol2 = root(ddet, k_in, args=(a_ee, a_ei, a_ie, a_ii, params), method='hybr')
-    if sol1.success:
-        det_root = True
-    else:
-        det_root = False
-    if sol2.success:
-        deriv_det = True
-    else:
-        deriv_det = False
-        
-    trace = neg_tr(k, a_ee, a_ii, params)
+        Output: 
+        :violation_type: type of violation. Options are: 0 (no violation), 1 (static), 2 (dynamic), 3 (both).
+    """
     
-    return det_root, deriv_det, trace
+    violation_type = 0
+    
+    if not pos_det(a_ee, a_ei, a_ie, a_ii, params):
+        return 0
+    if det_traj(k, a_ee, a_ei, a_ie, a_ii, params):
+        violation_type = 1
+    elif not neg_tr(k, a_ee, a_ii, params):
+        violation_type = 2
+    elif det_traj(k, a_ee, a_ei, a_ie, a_ii, params) and not neg_tr(k, a_ee, a_ii, params):
+        violation_type = 3
+    
+    return violation_type
 
