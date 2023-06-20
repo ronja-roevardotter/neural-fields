@@ -58,3 +58,19 @@ def getAvgPSD(arrays, fs, maxfreq=None):
         
     
     return freqs, avg_Pxx_den
+
+
+def getPosition(pixel_nmb, params):
+    """
+    This function returns the position on the ONE-dimensional line of a certain pixel.
+    Input:
+    :pixel_nmb: number of the pixel, integer
+    :params: only necessary - params.x
+    
+    Output:
+    :position: position x on line.
+    """
+    
+    position = params.x[pixel_nmb]
+    
+    return position

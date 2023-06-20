@@ -59,8 +59,8 @@ def defaultParams():
     params.mu_a = 0
     
     #strength and time constant - to turn adaptation off: set b=0
-    params.b = 0.5
-    params.tau_a = 100
+    params.b = 0 #0.5 - set it 0 until further notice (mostly to not accidentally run analysis with adaptation)
+    params.tau_a = 600
     
     # # - - - - # #
     
@@ -127,7 +127,7 @@ def setSpace(params, shift=False):
     if params.n%2==0:
         x2 = x1[1:-1]
         x2 = x2[::-1]
-        x = np.concatenate((x1,x2))
+        x = np.concatenate((-x1,x2))
     else:
         dxx = dx/2
         x_inf += dxx

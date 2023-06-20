@@ -240,7 +240,7 @@ def collectStabilities2(params=None, vary_params={'I_e': np.linspace(1,5,21), 'I
  #   var2 = var2[::-1]
     
     print(type(var1_str), type(var1))
-    df_columns=[var1_str, var2_str, 'stability', 'turing', 'p_random', 'p_down']
+    df_columns=[var1_str, var2_str, 'stability', 'turing', 'p_random', 'p_down', 'wavenumber']
     df = pd.DataFrame(columns=df_columns)
     
     nn = len(var1)
@@ -256,22 +256,23 @@ def collectStabilities2(params=None, vary_params={'I_e': np.linspace(1,5,21), 'I
             stab = checkFixPtsStability(fps, ps)
             
             violation = 0
+            k0 = None
             
             if sum(stab) == 2:
                 stability = 2
-                l=41
+                l=101
                 k = np.linspace(-2,2,l)
                 a_ee, a_ei, a_ie, a_ii = a_jkValues(fps[0], ps)
-                vio1 = violationType(k, a_ee, a_ei, a_ie, a_ii, ps)
+                vio1, k0 = violationType(k, a_ee, a_ei, a_ie, a_ii, ps)
                 a_ee, a_ei, a_ie, a_ii = a_jkValues(fps[-1], ps)
-                vio2 = violationType(k, a_ee, a_ei, a_ie, a_ii, ps)
+                vio2, k02 = violationType(k, a_ee, a_ei, a_ie, a_ii, ps)
                 violation = max(vio1, vio2)
             elif sum(stab) == 1:
                 stability = 1
-                l=41
+                l=101
                 k = np.linspace(-2,2,l)
                 a_ee, a_ei, a_ie, a_ii = a_jkValues(fps[list(stab).index(1)], ps)
-                violation = violationType(k, a_ee, a_ei, a_ie, a_ii, ps)
+                violation, k0 = violationType(k, a_ee, a_ei, a_ie, a_ii, ps)
             else:
                 stability = 0
                 
@@ -283,7 +284,7 @@ def collectStabilities2(params=None, vary_params={'I_e': np.linspace(1,5,21), 'I
                 p_down = p_random
             
             
-            values = [[var1[i], var2[j], stability, violation, p_random, p_down]]#, p_turing]]
+            values = [[var1[i], var2[j], stability, violation, p_random, p_down, k0]]#, p_turing]]
             df_temp = pd.DataFrame(values, columns=df_columns)
             df = pd.concat([df, df_temp])
                 
