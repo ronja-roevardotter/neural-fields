@@ -220,8 +220,10 @@ def checkFixPtsStability(fixed_points, params):
         ue0 = fixed_points[i][0]
         ui0 = fixed_points[i][1]
         y=[ue0, ui0]
-        if params.mtype == 'activity':
+        if params.mtype == 'activity' and params.b == 0:
             A = activity_A(y, params)
+        elif params.mtype == 'activity' and params.b != 0:
+            A = adap_A(y, params)
         else:
             A = voltage_A(y, params)
         w = eigvals(A)
@@ -245,7 +247,7 @@ def f_kernel(sigma, k, k_string='gaussian'):
 
 def deriv_f_kernel(sigma, k, k_string='gaussian'):
     
-    kernel_func = getattr(ks, 'deriv_f_'+k_string)
+    kernel_func = getattr(ks, 'deriv_f_' + k_string)
     
     return kernel_func(sigma, k)
 
@@ -272,6 +274,47 @@ def a_jkValues(fp, params):
         
     return a_ee, a_ei, a_ie, a_ii
 
+
+# # # - - - LINEARIZATION MATRIX WITH ADAPTATIOn - from 2x2 to 3x3 - - - # # #
+
+def adap_A11(ue, ui, params):
+    Be = params.w_ee * ue - params.w_ei * ui - params.b * F_a(ue, params) + params.I_e
+    return (1/params.tau_e) * (-1 + params.w_ee*derivF_e(Be, params))
+
+def adap_A12(ue, ui, params):
+    Be = params.w_ee * ue - params.w_ei * ui - params.b * F_a(ue, params) + params.I_e
+    return (1/params.tau_e) * (-params.w_ei) * derivF_e(Be, params)
+
+def adap_A13(ue, ui, params):
+    Be = params.w_ee * ue - params.w_ei * ui - params.b * F_a(ue, params) + params.I_e
+    return (1/params.tau_e) * (- params.b * derivF_e(Be, params))
+
+def adap_A21(ue, ui, params):
+    Bi = params.w_ie * ue - params.w_ii * ui + params.I_i
+    return (1/params.tau_i) * params.w_ie * derivF_i(Bi, params)
+
+def adap_A22(ue, ui, params):
+    Bi = params.w_ie * ue - params.w_ii * ui + params.I_i
+    return (1/params.tau_i) * (-1 + (-params.w_ii)*derivF_i(Bi, params))
+
+def adap_A23(ue, ui, params):
+    return 0
+
+def adap_A31(ue, ui, params):
+    return (1/params.tau_a) * derivF_a(ue, params)
+
+def adap_A32(ue, ui, params):
+    return 0
+
+def adap_A33(ue, ui, params):
+    return -(1/params.tau_a)
+
+def adap_A(x, params):
+    ue = x[0]
+    ui = x[1]
+    return [[adap_A11(ue, ui, params), adap_A12(ue, ui, params), adap_A13(ue, ui, params)], 
+            [adap_A21(ue, ui, params), adap_A22(ue, ui, params), adap_A23(ue, ui, params)], 
+            [adap_A31(ue, ui, params), adap_A32(ue, ui, params), adap_A33(ue, ui, params)]]
 
         
                     

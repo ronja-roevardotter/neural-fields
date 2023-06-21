@@ -152,7 +152,7 @@ def collectStabilities(params=None, vary_params={'I_e': np.linspace(1,5,21), 'I_
 # # # # # # # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - # # # # # # # # #
 
 
-def collectPatterns(fp, params, last_sec=100):
+def collectPatterns(fp, params, last_sec=3):
     
     """ This function collects the type of activity-pattern that is shown after running a simulation for different settings of parameters 
     (fix given by params, varied in trng-df DataFrame) initialized in each available fixed point per parametrization. 
@@ -175,15 +175,21 @@ def collectPatterns(fp, params, last_sec=100):
     e.g. parametrization shows 3 fixed points, [fp1, fp2, fp3], init in fp1 shows spatial, in fp2 &fp3 stationary patterns => patterns=[3,1,1]"""
     
 #    c1d = continuum1d.continuum1d()
+
+    if params.b==0:
+        itype = 'inte_fft'
+    else:
+        itype = 'inte_adaptation'
+        
     
-    exc, inh = c1d.run(params, itype='inte_fft', fp=fp)
+    exc, inh = c1d.run(params, itype=itype, fp=fp)
         
    # print('exc[-10]', exc[-10])
    # print('exc.T[-10]', exc.T[-10])
     #the returned activity is returned in shape: rows per time step, len(row)=#of pixels
     #we transpose that to have a matrix with one row per pixel, and coulmns=time steps.
     x = exc.T
-    temp = int(last_sec*(1/params.dt))
+    temp = int(last_sec*(1000/params.dt)) #number of seconds wanted * (ms/integration time step)
     x = x[:,-temp:]
     
  #   print('x before Pxx computation', x.flatten() )
