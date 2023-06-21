@@ -129,7 +129,7 @@ def collectStabilities(params=None, vary_params={'I_e': np.linspace(1,5,21), 'I_
                 
             
             for idx, fp in enumerate(fps_for_later):
-                p, a,b,c,d = collectPatterns(fp, ps, last_sec=100)
+                p, a,b,c,d = collectPatterns(fp, ps, last_sec=1)
                 patterns[idx] = p
             
             
@@ -283,9 +283,9 @@ def collectStabilities2(params=None, vary_params={'I_e': np.linspace(1,5,21), 'I
                 stability = 0
                 
             
-            p_random = collectPatterns(np.array([0.0, 0.01]), ps, last_sec=100) 
+            p_random = collectPatterns(np.array([0.0, 0.01]), ps, last_sec=1) 
             if np.any(fps):
-                p_down = collectPatterns(fps[0], ps, last_sec=100)  
+                p_down = collectPatterns(fps[0], ps, last_sec=1)  
             else:
                 p_down = p_random
             

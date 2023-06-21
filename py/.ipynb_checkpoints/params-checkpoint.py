@@ -82,7 +82,7 @@ def defaultParams():
     
     #choose time interval [start,end]=[0,T] [in ms]
     params.start_t = 0
-    params.end_t = 5000 #5000 ms = 5s
+    params.end_t = 2500 #2500 ms = 2.5s
     
     #spatial
     #choose number of pixels per axis
