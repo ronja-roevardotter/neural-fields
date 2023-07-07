@@ -341,6 +341,51 @@ def turing_A(k):
             [turing_A21(k, a_ie, params), turing_A22(k, a_ii, params)]]
 
 
+# # # - - - LINEARIZATION MATRIX - - - # # #
+        
+# # # - - - WITH ADAPTATION - turing-linearization matrix - - - # # #
+"""
+
+!!!!  TO DO  !!!!
+
+def turing_adap_A13(k, be, params):
+    return -(1/params.tau_e)*params.b*derivF_e(be)
+
+def turing_adap_A23(k, params):
+    return 0
+
+def turing_adap_A31(k, ue, params):
+    return (1/params.tau_a)*derivF_a(ue)
+
+def turing_adap_A32(k, params):
+    return 0 
+
+def turing_adap_A33(k, params):
+    return -(1/params.tau_a)
+
+def turing_adap_A(k, a_ee, a_ei, a_ie, a_ii, be, ue, ui, params):
+    #
+    Input:
+    :k: wavenumber k, array, non-zero
+    :a_jl: a_jk Values from function above, determined by fixedpoint (ue, ui), all scalars
+    :be: input to F_e for fixed point (ue, ui, derivF_a(ue)), scalar
+    :ue: excitatory fixed point value, scalar
+    :ui: inhibitory fixed point value, scalar
+    :params: dictionary of parameter setting
+    
+    Output:
+    :matrix A: linearization matrix for the coupled IDE-system 3-dimensional (with adaptation) -> 3x3 matrix
+    
+
+    #
+    
+    be = b_e = params.w_ee*ue - params.w_ei*ui - params.b*F_a(ue, params) + params.I_e
+    return [[turing_A11(k, a_ee, params), turing_A12(k, a_ei, params), turing_adap_A13(k, be, params)],
+            [turing_A21(k, a_ie, params), turing_A22(k, a_ii, params), turing_adap_A23(k, params)],
+            [turing_adap_A31(k, ue, params), turing_adap_A32(k, params), turing_adap_A33(k, params)]]
+            
+"""
+
 # # # - - - TRACE - - - # # #
     
 def tr(k, a_ee, a_ii, params):

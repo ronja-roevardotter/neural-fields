@@ -186,7 +186,7 @@ def collectPatterns(fp, params, last_sec=3):
         
    # print('exc[-10]', exc[-10])
    # print('exc.T[-10]', exc.T[-10])
-    #the returned activity is returned in shape: rows per time step, len(row)=#of pixels
+    #the returned activity is returned in shape: rows per time step, len(row)=#of pixels (i.e. = #columns)
     #we transpose that to have a matrix with one row per pixel, and coulmns=time steps.
     x = exc.T
     temp = int(last_sec*(1000/params.dt)) #number of seconds wanted * (ms/integration time step)

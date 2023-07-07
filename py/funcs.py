@@ -2,7 +2,7 @@ import numpy as np
 import scipy.signal as signal 
 
 
-def getPSD(array, fs, maxfreq=None):
+def getPSD(array, fs, maxfreq=300):
     """returns the Powerspectrum (density: [V**2/Hz]) with the possibility to cut off the PSD at a maximum frequency
     
     INPUT:
@@ -15,7 +15,7 @@ def getPSD(array, fs, maxfreq=None):
     :PSD_den: Power Spectrum Density (i.e. returns the power per frequency over the freqs array)
     """
     
-    freqs, Pxx_den = signal.welch(array, fs)
+    freqs, Pxx_den = signal.welch(array, fs, window='hanning', nperseg=8192)
     
     if maxfreq==None:
         maxfreq = max(freqs)
