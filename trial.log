@@ -1,0 +1,4 @@
+  File "/Users/ronja/Documents/GitHub/neural-fields/multiproc.py", line 38
+    def collectStability(var1_val=0, var2_val=0, var1_str='I_e', var2_str='I_i', df, params=None,  pattern_analysis=False):
+                                                                                     ^
+SyntaxError: non-default argument follows default argument
