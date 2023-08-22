@@ -61,7 +61,7 @@ def inverseF_a(y, params):
 def activity_ui(ue, params):
     """Returns the excitatory nullcline w.r.t. ue (\frac{due}{dt}=0)
        for the activity-based model"""
-    inside = params.w_ee * ue + params.I_e - inverseF_e(ue, params)
+    inside = params.w_ee * ue - params.b*F_a(ue, params) + params.I_e - inverseF_e(ue, params)
     return (1/params.w_ei) * inside
 
 def activity_ue(ui, params):

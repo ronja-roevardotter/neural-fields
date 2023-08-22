@@ -10,6 +10,7 @@ from py.params import setParams
 
 from py.analysis import F_e, F_i, F_a, derivF_e, derivF_i, derivF_a
 from py.analysis import a_jkValues, f_kernel
+from py.funcs import getSwitchArray, getSwitchIndex, getCommonElement
 
 
 # # # - - - # # # - - - adaptation matrix A(k)\in\mathbb{C}^{3\times3} - - - # # # - - - # # #
@@ -100,15 +101,28 @@ def checkImagEigval(k, fp, params):
     if all(temp < 0) or all(temp > 0):
         return 0
     else:
-        return 1
+        indeces = getSwitchIndex(temp)
+        c1_sign = c1(k[indeces], fp, params)
+        if any(c1_sign >= 0):
+            return 1
+        else:
+            return 0
     
 
 def checkTakensBogdanov(k, fp, params):
-    
-    if (all(c0(k, fp, params) < 0) or all(c0(k, fp, params) > 0)) and (all(c1(k, fp, params) < 0) or all(c1(k, fp, params) > 0)):
+    c0_array = c0(k, fp, params)
+    c1_array = c1(k, fp, params)
+    if (all(c0_array < 0) or all(c0_array > 0)) and (all(c1_array < 0) or all(c1_array > 0)):
         return 0
     else:
-        return 'to-do'
+        c0_indeces = getSwitchIndex(c0_array)
+        c1_indeces = getSwitchIndex(c1_array)
+        same_k0 = getCommonElement(c0_indeces, c1_indeces)
+        if same_k0:
+            return 1
+        else:
+            return 0
+        
 
 
 # # # - - - # # # - - - conditions - - - # # # - - - # # #
@@ -117,15 +131,12 @@ def checkTakensBogdanov(k, fp, params):
 def checkStability(k, fp, params):
     zeroVal = checkZeroEigval(k, fp, params)
     imagVal = checkImagEigval(k, fp, params)
+    if not imagVal:
+        doubleVal = checkTakensBogdanov(k, fp, params)
+    else:
+        doubleVal = 0
     
-    if not zeroVal and not imagVal:
-        return 0
-    elif zeroVal and not imagVal:
-        return 1
-    if not zeroVal and imagVal:
-        return 2
-    if zeroVal and imagVal:
-        return 3
+    return zeroVal, imagVal, doubleVal
     
     
     

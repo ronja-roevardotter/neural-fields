@@ -2,6 +2,50 @@ import numpy as np
 import scipy.signal as signal 
 
 
+def getSwitchArray(array):
+    """ returns the array at which positions the x-axis (have a zero) is crossed
+    help for implementation found on 'stackoverflow.com'
+    INPUT:
+    :array: 1d array of numerical values
+    
+    OUPUT:
+    :sign_switch_array: array with 1 at position of switch
+    e.g. array=[2,3,1,-1,-2,-1,1,2] -> sign_switch_array = [0, 0, 0, 1, 0, 0, 1, 0]
+    """
+    
+    
+    signs = np.sign(array)
+    sign_switch_array = ((np.roll(signs, 1) - signs) != 0).astype(int)
+    
+    return sign_switch_array
+
+def getSwitchIndex(array):
+    """ returns the indeces at which the positions the x-axis (have a zero) is crossed
+    help for implementation found on 'geeksforgeeks.org'
+    INPUT:
+    :array: 1d array of numerical values
+    
+    OUPUT:
+    :idx: array with indeces of switch
+    e.g. array=[2,3,1,-1,-2,-1,1,2] -> idx = [3,6]
+    """
+    
+    sign_switch_array = getSwitchArray(array)
+    idx = np.where(sign_switch_array == 1)[0]
+    
+    return idx
+
+def getCommonElement(array1, array2):
+    array1_set = set(array1)
+    array2_set = set(array2)
+    if (array1_set & array2_set):
+        return True
+    else:
+        return False
+    
+    
+    
+
 def getPSD(array, fs, maxfreq=300):
     """returns the Powerspectrum (density: [V**2/Hz]) with the possibility to cut off the PSD at a maximum frequency
     
