@@ -178,7 +178,7 @@ def computeFPs(pDict):
 
     for i in np.linspace(start, end, 61):
         if params.mtype == 'activity':
-            sol = root(activity, [i, i], args=(params,), jac=activity_A, method='lm')#, method='lm')
+            sol = root(activity, [i, i], args=(params,), jac=activity_A, method='hybr')#, method='lm')
           #  print('solution to root: ', sol.x)
         else:
           #  print('voltage(x): ', voltage([i,i]))

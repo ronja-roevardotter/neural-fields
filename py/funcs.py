@@ -46,7 +46,7 @@ def getCommonElement(array1, array2):
     
     
 
-def getPSD(array, fs, maxfreq=300):
+def getPSD(array, fs, maxfreq=300, nperseg = 1):
     """returns the Powerspectrum (density: [V**2/Hz]) with the possibility to cut off the PSD at a maximum frequency
     
     INPUT:
@@ -59,7 +59,7 @@ def getPSD(array, fs, maxfreq=300):
     :PSD_den: Power Spectrum Density (i.e. returns the power per frequency over the freqs array)
     """
     
-    freqs, Pxx_den = signal.welch(array, fs, window='hanning', nperseg=8192)
+    freqs, Pxx_den = signal.welch(array, fs, window='hann', nperseg=int(nperseg*fs))
     
     if maxfreq==None:
         maxfreq = max(freqs)
