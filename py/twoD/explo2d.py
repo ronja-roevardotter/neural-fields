@@ -203,14 +203,28 @@ def collectPatterns(fp, params):
     real_diff = np.max(reals) - np.min(reals)
     imag_diff = np.max(imags) - np.min(imags)
     
-    pattern = 0
+    pattern = []
     #stationary or temporal (no change over space)
-    if np.isclose(real_diff, 0.5, atol=0.1e-5) and imag_diff<0.1e-9:
+    if real_diff<0.6 and imag_diff<0.1e-9:
         #check further, it it changes over time or not
-        pattern = 1
-    elif real_diff>0.8 and not imag_diff>0.8:
+        for idx in range(1,3):
+            if (np.isclose(act_list[idx-1], act_list[idx], atol=0.1e-6)).all():
+                #stationary
+                pattern.append(1)
+            else:
+                #temporal
+                pattern.append(2)
+        pattern = max(pattern)
+    elif real_diff>0.8 and imag_diff>0.8:
         #check further, it it changes over time or not
-        pattern = 2
+        for idx in range(1,3):
+            if (np.isclose(act_list[idx-1], act_list[idx], atol=0.1e-6)).all():
+                #spatial
+                pattern.append(3)
+            else:
+                #spatiotemporal
+                pattern.append(4)
+        pattern = max(pattern)
     else:
         pattern = 0
         
