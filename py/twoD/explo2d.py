@@ -1,17 +1,19 @@
 import numpy as np
 import pandas as pd
 
-from py.params import setParams
-from py.analysis import computeFPs, checkFixPtsStability, a_jkValues, determinant_Turing_Hopf
-from py.analysis import tr, det, lmbd
+from py.twoD.params2d import setParams
+from py.twoD.analysis2d import computeFPs, checkFixPtsStability, a_jkValues, violationType
+from py.twoD.analysis2d import tr, det, lmbd
+
+from py.twoD.turings2d import checkStability
 
 from py.funcs import getAvgPSD
 
-from py.kernels import gaussian, exponential
+from py.twoD.kernels2d import gaussian
 
-import py.continuum1d as continuum1d
+import py.twoD.continuum2d as continuum2d
 
-c1d = continuum1d.continuum1d()
+c2d = continuum2d.continuum2d()
 
 
 
@@ -129,7 +131,7 @@ def collectStabilities(params=None, vary_params={'I_e': np.linspace(1,5,21), 'I_
                 
             
             for idx, fp in enumerate(fps_for_later):
-                p, a,b,c,d = collectPatterns(fp, ps, last_sec=100)
+                p, a,b,c,d = collectPatterns(fp, ps, last_sec=1)
                 patterns[idx] = p
             
             
@@ -152,7 +154,7 @@ def collectStabilities(params=None, vary_params={'I_e': np.linspace(1,5,21), 'I_
 # # # # # # # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - # # # # # # # # #
 
 
-def collectPatterns(fp, params, last_sec=100):
+def collectPatterns(fp, params):
     
     """ This function collects the type of activity-pattern that is shown after running a simulation for different settings of parameters 
     (fix given by params, varied in trng-df DataFrame) initialized in each available fixed point per parametrization. 
@@ -174,49 +176,43 @@ def collectPatterns(fp, params, last_sec=100):
     spatiotemporal=4
     e.g. parametrization shows 3 fixed points, [fp1, fp2, fp3], init in fp1 shows spatial, in fp2 &fp3 stationary patterns => patterns=[3,1,1]"""
     
-#    c1d = continuum1d.continuum1d()
-    
-    exc, inh = c1d.run(params, itype='inte_fft', fp=fp)
-        
-   # print('exc[-10]', exc[-10])
-   # print('exc.T[-10]', exc.T[-10])
-    #the returned activity is returned in shape: rows per time step, len(row)=#of pixels
-    #we transpose that to have a matrix with one row per pixel, and coulmns=time steps.
-    x = exc.T
-    temp = int(last_sec*(1/params.dt))
-    x = x[:,-temp:]
-    
- #   print('x before Pxx computation', x.flatten() )
-    
-    
-    #to identify whether there is change over time per node 
-    #("per node there is a frequency>0 => temporal pattern"), we get the average
-    #PSD over time and check, whether all(power(frequencies)) are close to 0: 
-    #if returned false, then there is a frequency with power >0
-    #i.e. a change in activity over time => temporal pattern
-    #investigated time series-matrix: x=(rows=nodes, columns=time steps), 
-    #e.g. 37 nodes and 5 seconds => shape=(37,5*variables['delta_t'])
-    
-    fs = params.n
-    f_time, Pxx_den_time = getAvgPSD(x, fs)
-    temporally_homogeneous = all(Pxx_den_time <=0.1*(10**(-5)))  #all(np.isclose(Pxx_den_time,0))
-    
-    #to identify vise verca, if there is a change in activiy over space, 
-    #we check the frequency over nodes per time step, 
-    #hence transpose x again
-    x=x.T
-    fs = params.dt
-    f_space, Pxx_den_spatial = getAvgPSD(x, fs)
-    spatially_homogeneous = all(Pxx_den_spatial <=0.1*(10**(-5)))  #np.isclose(Pxx_den_spatial,0))
-    
-    if spatially_homogeneous and temporally_homogeneous:
-        pattern = 1
-    elif spatially_homogeneous and not temporally_homogeneous:
-        pattern = 2
-    elif not spatially_homogeneous and temporally_homogeneous:
-        pattern = 3
+#    c2d = continuum1d.continuum1d()
+
+    if params.b==0:
+        itype = 'inte_fft'
     else:
-        pattern = 4
+        itype = 'inte_adaptation'
+        
+    
+    exc, inh = c2d.run(params, itype=itype, fp=fp)
+        
+    #the returned activity is returned in shape: rows per time step, len(row)=#of pixels (i.e. = #columns)
+    #we transpose that to have a matrix with one row per pixel, and coulmns=time steps.
+    x = exc[-1].T
+    frequs = np.fft.fftshift(np.fft.fft2(x))
+    
+    def sigmoid(x):
+        return 1 / (1 + np.exp(-x))
+    
+    
+    norm = sigmoid(frequs)
+    reals = sigmoid(frequs.real)
+    imags = sigmoid(frequs.imag)
+    
+    abs_diff = np.max(np.log(abs(norm))) - np.min(np.log(abs(norm)))
+    real_diff = np.max(reals) - np.min(reals)
+    imag_diff = np.max(imags) - np.min(imags)
+    
+    pattern = 0
+    #stationary or temporal (no change over space)
+    if np.isclose(real_diff, 0.5, atol=0.1e-5) and imag_diff<0.1e-9:
+        #check further, it it changes over time or not
+        pattern = 1
+    elif real_diff>0.8 and not imag_diff>0.8:
+        #check further, it it changes over time or not
+        pattern = 2
+    else:
+        pattern = 0
         
  #   print('In pattern collection, pattern: ', pattern)
         
@@ -240,7 +236,103 @@ def collectStabilities2(params=None, vary_params={'I_e': np.linspace(1,5,21), 'I
  #   var2 = var2[::-1]
     
     print(type(var1_str), type(var1))
-    df_columns=[var1_str, var2_str, 'stability', 'turing', 'turing_hopf', 'p_random']#, 'p_turing']
+    df_columns=[var1_str, var2_str, 'stability', 'turing', 'p_random', 'p_down', 'wavenumber']
+    df = pd.DataFrame(columns=df_columns)
+    
+    nn = len(var1)
+    mm = len(var2)
+    print('nn=%i, mm=%i' %(nn,mm))
+    
+    for aa in range(0,nn):
+        for bb in range(0,mm):
+         #   print('we are in round (aa,bb)= (%i, %i)' %(aa,bb))
+            params[var1_str] = var1[aa]
+            params[var2_str] = var2[bb]
+            
+            ps = setParams(params)
+        #    print('parameters set: ', str(ps))
+            fps = computeFPs(ps)
+            stab = checkFixPtsStability(fps, ps)
+            
+            violation = 0
+            k0 = None
+            
+            if sum(stab) == 2:
+                stability = 2
+                l=101
+                k = np.linspace(0,2,l)
+                kk = [] #np.zeros(int((((N-1)*N)/2)+N))
+
+                for idx1 in range(l):
+                    for idx2 in range(idx1, l):
+                        kk.append(k[idx1]**2+k[idx2]**2)
+                kk.sort()
+                kk = np.array(kk)
+                a_ee, a_ei, a_ie, a_ii = a_jkValues(fps[0], ps)
+                vio1, k0 = violationType(kk, a_ee, a_ei, a_ie, a_ii, ps)
+                a_ee, a_ei, a_ie, a_ii = a_jkValues(fps[-1], ps)
+                vio2, k02 = violationType(kk, a_ee, a_ei, a_ie, a_ii, ps)
+                violation = max(vio1, vio2)
+                
+            elif sum(stab) == 1:
+                stability = 1
+                l=101
+                k = np.linspace(0,2,l)
+                kk = [] #np.zeros(int((((N-1)*N)/2)+N))
+
+                for idx1 in range(l):
+                    for idx2 in range(idx1, l):
+                        kk.append(k[idx1]**2+k[idx2]**2)
+                kk.sort()
+                kk = np.array(kk)
+                a_ee, a_ei, a_ie, a_ii = a_jkValues(fps[list(stab).index(1)], ps)
+                violation, k0 = violationType(kk, a_ee, a_ei, a_ie, a_ii, ps)
+                
+            else:
+                stability = 0
+                
+            
+            p_random = collectPatterns(np.array([0.0, 0.01]), ps) 
+            p_down = 0
+            if np.any(fps):
+                lueckenfueller=1
+                p_down = collectPatterns(fps[0], ps)  
+            else:
+                p_down = p_random
+                stability = None
+            
+            
+            values = [[var1[aa], var2[bb], stability, violation, p_random, p_down, k0]]#, p_turing]]
+            df_temp = pd.DataFrame(values, columns=df_columns)
+            df = pd.concat([df, df_temp])
+                
+            
+            print('We finished round I_e = %f, I_i=%f, i=%i, j=%i' %(var1[aa],var2[bb],aa,bb))
+ #   print('df: ', df)
+    
+    return df
+
+
+def collectAdapStabs(params=None, 
+                     vary_params={'I_e': np.linspace(1,5,21), 'I_i': np.linspace(0,4,21)}, 
+                     pattern_analysis=False):
+    
+    """
+    This functions returns collected information on the fixed points:
+    stability: type of stability. Options are: 0 (Hopf instability); 1 (1 stable fixed points); 2 (two stable fixed points)
+    turing: checks the turing-stability for stable fixed points. 0 (all remain stable);  1 (at least one is turing unstable)
+    p_random: emerging pattern, if randomly initialised
+    p_turing: emerging pattern, if initialised in turing-unstable fixed point
+    
+    To have the origin of both varied params, transpose each matrix. 
+    """
+    
+    var1_str, var1 = list(vary_params.items())[0]
+    var2_str, var2 = list(vary_params.items())[1]
+ #   var2 = var2[::-1]
+    
+    print(type(var1_str), type(var1))
+    df_columns=[var1_str, var2_str, 'stability', 'turing', 'p_random', 'p_down']
     df = pd.DataFrame(columns=df_columns)
     
     nn = len(var1)
@@ -255,52 +347,33 @@ def collectStabilities2(params=None, vary_params={'I_e': np.linspace(1,5,21), 'I
             fps = computeFPs(ps)
             stab = checkFixPtsStability(fps, ps)
             
-         #   p_turing = 0
             turing = 0
-            turing_hopf=0
             
             if sum(stab) == 2:
                 stability = 2
-                l=41
-                k = np.linspace(-2,2,l)
-                a_ee, a_ei, a_ie, a_ii = a_jkValues(fps[0], ps)
-                d1 = det(k, a_ee, a_ei, a_ie, a_ii, ps)
-                t1 = tr(k, a_ee, a_ii, ps)
-                trng1 = checkTuringStability(d1, t1)
-            #    zero_det1, zero_deriv_det1, pos_trace1 = determinant_Turing_Hopf(k, a_ee, a_ii, a_ei, a_ie, ps)
-                a_ee, a_ei, a_ie, a_ii = a_jkValues(fps[-1], ps)
-                d2 = det(k, a_ee, a_ei, a_ie, a_ii, ps)
-                t2 = tr(k, a_ee, a_ii, ps)
-                trng2 = checkTuringStability(d2, t2)
-            #    zero_det2, zero_deriv_det2, pos_trace2 = determinant_Turing_Hopf(k, a_ee, a_ii, a_ei, a_ie, ps)
-                turing = max(trng1, trng2)
-            #    if trng1 == 1:
-            #        p_turing = collectPatterns(fps[0], ps, last_sec=100)
-            #    elif trng2 == 1:
-            #        p_turing = collectPatterns(fps[-1], ps, last_sec=100)
-            #    if all([zero_det1, zero_deriv_det1]) or all([zero_det2, zero_deriv_det2]): 
-            #        turing_hopf = 1
+                l=61
+                k = np.linspace(0,3,l)
+                turing0 = checkStability(k, fps[0], ps)
+                turing1 = checkStability(k, fps[-1], ps)
+                turing = max(turing0, turing1)
             elif sum(stab) == 1:
                 stability = 1
-                l=41
+                l=101
                 k = np.linspace(-2,2,l)
-                a_ee, a_ei, a_ie, a_ii = a_jkValues(fps[list(stab).index(1)], ps)
-                d = det(k, a_ee, a_ei, a_ie, a_ii, ps)
-                t = tr(k, a_ee, a_ii, ps)
-                turing = checkTuringStability(d, t)
-           #     zero_det, zero_deriv_det, pos_trace = determinant_Turing_Hopf(k, a_ee, a_ii, a_ei, a_ie, ps)
-           #     if turing:
-           #         p_turing = collectPatterns(fps[list(stab).index(1)], ps, last_sec=100)
-           #     if all([zero_det, zero_deriv_det]): 
-           #         turing_hopf = 1
+                turing = checkStability(k, fps[-1], ps)
             else:
                 stability = 0
                 
             
-            p_random = collectPatterns(np.array([0.0, 0.01]), ps, last_sec=100)            
+            p_random = collectPatterns(np.array([0.0, 0.01]), ps, last_sec=1) 
+            if np.any(fps):
+                p_down = collectPatterns(fps[0], ps, last_sec=1)  
+            else:
+                p_down = p_random
+                stability = None
             
             
-            values = [[var1[i], var2[j], stability, turing, turing_hopf, p_random]]#, p_turing]]
+            values = [[var1[i], var2[j], stability, turing, p_random, p_down]]#, p_turing]]
             df_temp = pd.DataFrame(values, columns=df_columns)
             df = pd.concat([df, df_temp])
                 
@@ -310,10 +383,5 @@ def collectStabilities2(params=None, vary_params={'I_e': np.linspace(1,5,21), 'I
     
     return df
 
-
-# TO DO ! ! !
-#Write a function that one by one identifies the different stability types
-# 1. Locally linear stable
-# 2. Turing- & Turing-Hopf-Unstable
 
 

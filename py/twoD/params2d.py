@@ -52,6 +52,19 @@ def defaultParams():
     params.mu_e = 0 #excitatory threshold
     params.mu_i = 0 #inhibitory threshold
     
+    # # - - adaptation parameters - - # #
+    
+    #transfer function
+    params.beta_a = 5
+    params.mu_a = 0
+    
+    #strength and time constant - to turn adaptation off: set b=0
+    params.b = 0 #0.5 - set it 0 until further notice (mostly to not accidentally run analysis with adaptation)
+    params.tau_a = 600
+    
+    # # - - - - # #
+    
+    
     #Write seperate function for setting the parameters of the coupling function w(x), but set the function type:
     params.kernel = 'gaussian' #else choosable: exponential,...
 
@@ -156,8 +169,8 @@ def ringValues(params):
     
     kernel_func = getattr(ks, params.kernel)
     
-    ke = kernel_func(params.sigma_e, params.xcoords, params.ycoords)*params.dx*params.dy
-    ki = kernel_func(params.sigma_i, params.xcoords, params.ycoords)*params.dx*params.dy
+    ke = kernel_func(params.sigma_e, params.distx)*params.dx*params.dy
+    ki = kernel_func(params.sigma_i, params.distx)*params.dx*params.dy
     
     #normalize kernel w.r.t. integration space step dx
  #   alpha_e = np.sum(ke)*params.dx*params.dy #normalisation factor for exc
@@ -212,6 +225,10 @@ def setParams(pDict):
     params.x, params.y, params.dx, params.dy = setSpace(params, shift=False)
     
     params.xcoords, params.ycoords = np.meshgrid(params.x, params.y)
+    
+    #the distance matrix w.r.t. the zero-point 
+    #we also define the activity on this grid. We observe the grid w.r.t. distance always.
+    params.distx = params.xcoords**2 + params.ycoords**2
     
     params.ke, params.ki = ringValues(params) #, params.ke_fft, params.ki_fft = ringValues(params)
     

@@ -69,7 +69,7 @@ class continuum2d:
         :delay: temporal delay from one pixel to another, determined by x,c and dt, array
         
         """
-        print('1d Model initialised.')
+        print('2d Model initialised.')
         
         
     def run(self, params=None, fp=np.array([0.0, 0.01]), itype='inte_fft'):

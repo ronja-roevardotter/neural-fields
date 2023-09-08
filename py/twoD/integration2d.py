@@ -65,7 +65,7 @@ def runIntegration(params, fp=np.array([0.0, 0.01]), itype='inte_fft',):
     ue_init=np.random.uniform(init_exc[0], init_exc[1], ke.shape) #-> shape = (m,n)
     ui_init=np.random.uniform(init_inh[0], init_inh[1], ki.shape)
     
-    print('ue_init=%s' %str(ue_init))
+ #   print('ue_init=%s' %str(ue_init))
     
     integrate = globals()[itype]
     
@@ -144,7 +144,7 @@ def inte_fft(mtype,
         if t in time_stamps:
             ue_out.append(ue_new.copy())
             ui_out.append(ui_new.copy())
-            print('Round t=%i' %int(t))
+        #    print('Round t=%i' %int(t))
             
         ue_old = ue_new
         ui_old = ui_new
