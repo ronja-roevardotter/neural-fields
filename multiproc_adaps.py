@@ -1,3 +1,5 @@
+# # # TO - DO # # # Update zu Adaps-Analyse!!! -> über git!
+
 # change into the root directory of the project
 import os
 if os.getcwd().split("/")[-1] == "dev":
@@ -16,21 +18,26 @@ import itertools
 
 import pandas as pd
 from multiprocessing import Pool
+from time import time
+# importing datetime module for now()
+import datetime
 
 from py.explo import collectPatterns
-from py.analysis import setParams, computeFPs, checkFixPtsStability, a_jkValues, violationType
+from py.analysis import setParams, computeFPs, checkFixPtsStability
+
+from py.turings import checkStability
 
 
 def setNecVals():
 
     #set parameters to vary and DataFrame that's updated    
-    params = {'b': 0, 'tau_a': 1000, 'end_t': 8*1000, 'kernel': 'gaussian'}
+    params = {'b': 0.25, 'tau_a': 600, 'beta_a': 10, 'mu_a': 0.4, 'end_t': 12*1000}
     
     var1_str = 'I_e'
     var2_str = 'I_i'
     
     # creating new pandas DataFrame
-    df_columns = [var1_str, var2_str, 'stability', 'turing', 'p_random', 'p_down', 'wavenumber']
+    df_columns = [var1_str, var2_str, 'stability', 'static', 'dynamic', 'double', 'p_random', 'p_down']
     df_temp = pd.DataFrame(columns=df_columns)
     
     return params, var1_str, var2_str, df_columns, df_temp
@@ -60,24 +67,20 @@ def collectStability(var1_val=0, var2_val=0):
     fps = computeFPs(ps)
     stab = checkFixPtsStability(fps, ps)
     
-    violation = 0
-    k0 = None
+    static, dynamic, double = 0, 0, 0
     
     if sum(stab) == 2:
         stability = 2
-        l=101
-        k = np.linspace(-2,2,l)
-        a_ee, a_ei, a_ie, a_ii = a_jkValues(fps[0], ps)
-        vio1, k0 = violationType(k, a_ee, a_ei, a_ie, a_ii, ps)
-        a_ee, a_ei, a_ie, a_ii = a_jkValues(fps[-1], ps)
-        vio2, k02 = violationType(k, a_ee, a_ei, a_ie, a_ii, ps)
-        violation = max(vio1, vio2)
+        l=301
+        k = np.linspace(0,2,l)
+        static0, dynamic0, double0 = checkStability(k, fps[0], ps)
+        static1, dynamic1, double1 = checkStability(k, fps[-1], ps)
+        static, dynamic, double = max(static0, static1), max(dynamic0, dynamic1), max(double0, double1)
     elif sum(stab) == 1:
         stability = 1
-        l=101
-        k = np.linspace(-2,2,l)
-        a_ee, a_ei, a_ie, a_ii = a_jkValues(fps[list(stab).index(1)], ps)
-        violation, k0 = violationType(k, a_ee, a_ei, a_ie, a_ii, ps)
+        l=301
+        k = np.linspace(0,2,l)
+        static, dynamic, double = checkStability(k, fps[-1], ps)
     else:
         stability = 0
         
@@ -90,11 +93,8 @@ def collectStability(var1_val=0, var2_val=0):
         p_down = p_random
         stability = None
     
- #   print('We have finished round %s=%.2f, %s=%.2f' %(var1_str, var1_val, var2_str, var2_val))
     
-    values = [[var1_val, var2_val, stability, violation, p_random, p_down, k0]]#, p_turing]]
-  #  df_temp = pd.DataFrame(values, columns=df_columns)
-  #  df = pd.concat([df, df_temp])
+    values = [[var1_val, var2_val, stability, static, dynamic, double, p_random, p_down]]
     
     return values
 
@@ -116,7 +116,16 @@ def pool_handler():
     
     xx, yy = np.meshgrid(var1_vals, var2_vals)
     
-    p = Pool(100)
+    # using now() to get current time
+    current_time = datetime.datetime.now()
+ 
+    # Printing value of now.
+    print("Time now is:", current_time)
+    
+    start = time()
+    print('start time: ', start)
+    
+    p = Pool(70)
     
     l = p.starmap(run, zip(xx.flatten(), yy.flatten()))
     
@@ -129,9 +138,9 @@ def pool_handler():
     df = pd.DataFrame(columns=df_columns)
     for ls in l:
         df_temp = pd.DataFrame(ls, columns=df_columns)
-        df = pd.concat([df, df_temp])#pd.DataFrame.from_records(l, columns=df_columns)
+        df = pd.concat([df, df_temp])  #pd.DataFrame.from_records(l, columns=df_columns)
 
-    filestr = 'high-default.csv'
+    filestr = 'high-adaps.csv'
 
     # writing empty DataFrame to the new csv file
     df.to_csv(cwd_csv + filestr)
@@ -139,10 +148,20 @@ def pool_handler():
     print('Simulation completed.')
     
     print('File is saved in %s%s' %(cwd_csv, filestr))
+    runtime = time()-start
+    print('RunTime: ', runtime)
+    print(' ')
+    minutes = runtime/60
+    print('RunTime in minutes: ', minutes)
+    print(' ')
 
 
 if __name__=="__main__":
     pool_handler()
+
+
+
+
 
 
 

@@ -61,7 +61,7 @@ def inverseF_a(y, params):
 def activity_ui(ue, params):
     """Returns the excitatory nullcline w.r.t. ue (\frac{due}{dt}=0)
        for the activity-based model"""
-    inside = params.w_ee * ue - params.b*F_a(ue, params) + params.I_e - inverseF_e(ue, params)
+    inside = params.w_ee * ue + params.I_e - inverseF_e(ue, params)
     return (1/params.w_ei) * inside
 
 def activity_ue(ui, params):
@@ -178,7 +178,7 @@ def computeFPs(pDict):
 
     for i in np.linspace(start, end, 61):
         if params.mtype == 'activity':
-            sol = root(activity, [i, i], args=(params,), jac=activity_A, method='hybr')#, method='lm')
+            sol = root(activity, [i, i], args=(params,), jac=activity_A, method='lm')#, method='lm')
           #  print('solution to root: ', sol.x)
         else:
           #  print('voltage(x): ', voltage([i,i]))
@@ -419,13 +419,13 @@ def pos_det(a_ee, a_ei, a_ie, a_ii, params):
         return False
     
 def neg_tr(k, a_ee, a_ii, params):
-    if all(tr(k, a_ee, a_ii, params)< -0.1**16):
+    if all(tr(k, a_ee, a_ii, params)< 0): #-0.1**16):
         return True
     else:
         return False
     
 def det_traj(k, a_ee, a_ei, a_ie, a_ii, params):
-    if any(det(k, a_ee, a_ei, a_ie, a_ii, params)< -0.1**16):
+    if any(det(k, a_ee, a_ei, a_ie, a_ii, params)< 0): #-0.1**16):
         return True
     else:
         return False
