@@ -183,12 +183,19 @@ def collectPatterns(fp, params):
     else:
         itype = 'inte_adaptation'
         
+    ps = setParams(params)
     
-    exc, inh = c2d.run(params, itype=itype, fp=fp)
+    #for 2d I'm setting the simulation duration & number of pictures during simulation extra 
+    #to ensure a high enough resolutionfor the pattern recognition.
+   
+    ps['end_t'] = 8*1000 #5 sekunden
+    ps['pic_nmb'] = 80 #10 Bilder pro Sekunde
+    
+    exc, inh = c2d.run(ps, itype=itype, fp=fp)
         
     #the returned activity is returned in shape: rows per time step, len(row)=#of pixels (i.e. = #columns)
     #we transpose that to have a matrix with one row per pixel, and coulmns=time steps.
-    x = exc[-1].T
+    x = exc[-1]
     frequs = np.fft.fftshift(np.fft.fft2(x))
     
     def sigmoid(x):
@@ -203,9 +210,11 @@ def collectPatterns(fp, params):
     real_diff = np.max(reals) - np.min(reals)
     imag_diff = np.max(imags) - np.min(imags)
     
+    act_list = [exc[-1], exc[-5], exc[-10]]
+    
     pattern = []
     #stationary or temporal (no change over space)
-    if real_diff<0.6 and imag_diff<0.1e-9:
+    if real_diff<0.6 and imag_diff<0.1e-8:
         #check further, it it changes over time or not
         for idx in range(1,3):
             if (np.isclose(act_list[idx-1], act_list[idx], atol=0.1e-6)).all():
@@ -215,7 +224,8 @@ def collectPatterns(fp, params):
                 #temporal
                 pattern.append(2)
         pattern = max(pattern)
-    elif real_diff>0.8 and imag_diff>0.8:
+    else:
+    #elif real_diff>0.8 and imag_diff>0.8:
         #check further, it it changes over time or not
         for idx in range(1,3):
             if (np.isclose(act_list[idx-1], act_list[idx], atol=0.1e-6)).all():
@@ -225,8 +235,8 @@ def collectPatterns(fp, params):
                 #spatiotemporal
                 pattern.append(4)
         pattern = max(pattern)
-    else:
-        pattern = 0
+    #else:
+    #    pattern = 0
         
  #   print('In pattern collection, pattern: ', pattern)
         
