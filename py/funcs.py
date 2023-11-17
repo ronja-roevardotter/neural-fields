@@ -17,6 +17,8 @@ def getSwitchArray(array):
     signs = np.sign(array)
     sign_switch_array = ((np.roll(signs, 1) - signs) != 0).astype(int)
     
+ #   print('getSwitchArray returns this list: %s' %str(sign_switch_array))
+    
     return sign_switch_array
 
 def getSwitchIndex(array):
@@ -32,6 +34,11 @@ def getSwitchIndex(array):
     
     sign_switch_array = getSwitchArray(array)
     idx = np.where(sign_switch_array == 1)[0]
+    
+    if not idx.any():
+        idx = [0]
+    elif len(idx)>1 and idx[0]==0:
+        idx = idx[1:]
     
     return idx
 
