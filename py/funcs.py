@@ -125,3 +125,145 @@ def getPosition(pixel_nmb, params):
     position = params.x[pixel_nmb]
     
     return position
+
+
+            # # # - - -                                                                - - - # # # 
+# # # - - - The following functions were originally added to determine the phase & phase latencies - - - # # #
+            # # # - - -                                                                - - - # # # 
+
+def rotation_in_latency(array):
+    """This function determines, based on the phase latency, into which direction the traveling waves rotate.
+    INPUT:
+    :array: numpy array, 1-dimensional, consists of the phase latency 
+            ('how many time steps it takes node to cross the threshold 2\pi') per node (i.e. dim(array)=params.n)
+            
+    OUTPUT:
+    :rotation: -1 (clockwise), or +1 (counterclockwise)
+    """
+    
+    max_arg = np.argmax(array)
+    argmax_before = max_arg-1
+    argmax_after = max_arg+1
+    if argmax_after == len(array):
+        argmax_after=0
+    diff_to_left = np.abs(array[max_arg]-array[int(argmax_before)])
+    diff_to_right = np.abs(array[max_arg]-array[int(argmax_after)])
+    
+    if diff_to_left>diff_to_right:
+        rotation = +1 #"counterclockwise"
+    else:
+        rotation = -1 #"clockwise"
+
+    return rotation
+
+def count_nodes_for_descent(array, rotation):
+    """This function determines the amount of nodes that are necessary for one full phase transition from max to min
+    i.e. how many nodes are necessary for one full phase
+    INPUT: 
+    :array: numpy array, 1-dimensional, consists of the phase latency 
+            ('how many time steps it takes node to cross the threshold 2\pi') per node (i.e. dim(array)=params.n)
+    :rotation: identifies in which direction we have to descent to count until next max
+    
+    OUTPUT:
+    :count: amount of nodes that are necessary until the next full phase transition starts
+    """
+    
+    max_arg = np.argmax(array)
+    
+    count = 0
+    node = max_arg
+    if rotation<0:
+        while array[node-1] < array[node]:
+            count += 1
+            node -= 1
+            node = int(node)
+            if node >= len(array)-1:
+                node = 0
+    else:
+        while array[node+1] < array[node]:
+            count += 1
+            node += 1
+            node = int(node)
+            if node >= len(array)-1:
+                node = 0
+    return count
+
+
+def hilbert_trafo_nd(signal, axis=0):
+    """simply the call of the off-shelf implementation to not have to calculate it for every feature individually.
+    INPUT:
+    :signal: (n,m)-dimensional array of real-valued signal. 
+    We have activity=(rows,columns)=(time,nodes) -> default-axis=0.
+    
+    :output: (n,m)-dimensional array analytical representation of signal
+    """
+    from scipy.signal import hilbert
+    
+    #compute Hilbert Transform for analytical signal representation
+    #ue.shape = (time-steps+1, number of nodes)
+    #i.e. rows=time, columns=node -> want hilbert trafo w.r.t. time => axis=0
+    ana_signal = hilbert(signal, axis=axis)
+    
+    return(ana_signal)
+
+def hilbert_trafo_1d(signal):
+    """simply the call of the off-shelf implementation to not have to calculate it for every feature individually"""
+    from scipy.signal import hilbert
+    
+    ana_signal = hilbert(signal)
+    
+    return(ana_signal)
+
+def inst_phase(signal):
+    """Compute the instantaneous phase per time step per node."""
+    
+    #without unwrapping?
+    inst_phase = np.unwrap(np.angle(signal))
+    
+    #inst_phase = np.unwrap(np.angle(signal))
+    
+    return inst_phase
+
+def inst_frequ(signal):
+    """ This function is supposed to determine the instantaneous frequency of a real-valued signal. 
+    We use the method from Muller et al (2014), DOI: 10.1038/ncomms4675.
+    
+    INPUT:
+    :signal: analytical representation (a+ib) of real-valued times series, 1-dimensional, array
+    
+    :output: instantaneous frequency without phase unwrapping, array"""
+    
+    
+    #compute Hilbert Transform for analytical signal representation
+    #ue.shape = (time-steps+1, number of nodes)
+    #i.e. rows=time, columns=node -> want hilbert trafo w.r.t. time => axis=0
+   # ana_signal = hilbert(signal)#, axis=0)
+    
+    complex_conj = np.conj(signal)
+    #roll complex conjugate s.t. in product we compute 
+    #(X_n\cdotX^*_{n+1} i.e. we multiply the analytical representation of signal 
+    #at space step n with the complex conjugate of the next space step n+1)
+    complex_conj = np.roll(complex_conj, -1)
+    
+    #use elementwise multiplication
+    inst_frequ_temp = np.angle(np.multiply(signal, complex_conj))
+    
+    #omit last one, since it would be the product of X_n\cdotX^*_0
+    inst_frequ = inst_frequ_temp[:-1]
+    
+    return inst_frequ
+    
+
+# explicit function to normalize array (for visualisation reasons - very helpful!)
+def normalize(arr, t_min, t_max):
+    norm_arr = []
+    diff = t_max - t_min
+    diff_arr = max(arr) - min(arr)
+    for i in arr:
+        temp = (((i - min(arr))*diff)/diff_arr) + t_min
+        norm_arr.append(temp)
+    return norm_arr
+
+
+
+
