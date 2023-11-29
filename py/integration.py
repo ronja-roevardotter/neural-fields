@@ -162,13 +162,6 @@ def inte_fft(mtype,
         ui[t] = ui[t-1] + (dt * rhs_i)
         
         
-  #      print('# # - - NEW ROUND - - # #')
-  #      print('t: ', t)
-  #      print('ue: ', ue)
-        
-  #      print('ve: ', ve)
-  #      print('ke_fft: ', ke_fft)
-        
     
     return ue, ui
 
