@@ -61,7 +61,7 @@ def inverseF_a(y, params):
 def activity_ui(ue, params):
     """Returns the excitatory nullcline w.r.t. ue (\frac{due}{dt}=0)
        for the activity-based model"""
-    inside = params.w_ee * ue + params.I_e - inverseF_e(ue, params) -params.b*inverseF_a(ue, params)
+    inside = params.w_ee * ue + params.I_e - inverseF_e(ue, params) - params.b*F_a(ue, params)
     return (1/params.w_ei) * inside
 
 def activity_ue(ui, params):
@@ -90,11 +90,11 @@ def voltage_ue(ui, params):
 
 # # # - - - activity-based matrix - - - # # #
 def activity_A11(ue, ui, params):
-    Be = params.w_ee * ue - params.w_ei * ui + params.I_e
-    return (1/params.tau_e) * (-1 + params.w_ee*derivF_e(Be, params))
+    Be = params.w_ee * ue - params.w_ei * ui + params.I_e - params.b * F_a(ue, params)
+    return (1/params.tau_e) * (-1 + derivF_e(Be, params) * (params.w_ee - params.b * derivF_a(ue, params))) 
 
 def activity_A12(ue, ui, params):
-    Be = params.w_ee * ue - params.w_ei * ui + params.I_e
+    Be = params.w_ee * ue - params.w_ei * ui + params.I_e - params.b * F_a(ue, params)
     return (1/params.tau_e) * (-params.w_ei) * derivF_e(Be, params)
 
 def activity_A21(ue, ui, params):
@@ -178,7 +178,7 @@ def computeFPs(pDict):
 
     for i in np.linspace(start, end, 61):
         if params.mtype == 'activity':
-            sol = root(activity, [i, i], args=(params,), jac=activity_A, method='lm')#, method='lm')
+            sol = root(activity, [i, i], args=(params,), jac=activity_A, method='hybr')#, method='lm')
           #  print('solution to root: ', sol.x)
         else:
           #  print('voltage(x): ', voltage([i,i]))
