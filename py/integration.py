@@ -198,7 +198,7 @@ def inte_adaptation(mtype,
         indeces = np.array([t*np.ones(n)-delay]).astype(int)
         
         if mtype=='activity':
-            if t<=len(time): #d_max+1: #len(time):
+            if t<=len(time):#d_max+1: #len(time):
                 ve = np.fft.fft(ue[t-1])
                 vi = np.fft.fft(ui[t-1])
             else:
@@ -323,12 +323,6 @@ def inte_approxi(mtype,
         ui[t] = ui[t-1] + (dt * rhs_i)
         
         
-    #    print('# # - - NEW ROUND - - # #')
-    #    print('t: ', t)
-        
-    #    print('conv_e: ', conv_e)
-    #    print('ke_mtx: ', ke_mtx)
-    #    print('ue: ', ue)
         if all(conv_e==ue[t-1]):
             print('approximation by convolution is the exact same as activity one step before. does that make sense? I dont think so')
         

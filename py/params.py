@@ -183,11 +183,13 @@ def setDelay(params):
     :delay: array of integers that indicate the delay from pixel to pixel based on velocity c
     """
     
+    d_syn = 0.3 #in [m/s] minimum synaptic delay - one can set delay=d_syn+(|x-y|/c)
+    
     delay_x = abs(params.x) #assume distance in mm and velocity in m/s -> transform c into mm/s by multiplying with 1000
-    params.c *= 1000
+    params.c *= 1000 #ommitable, if transformation into ms happens as well - m/s=mm/ms !!
     delay = delay_x*(1/params.c) # in seconds
     
-    delay *= 1000 #in milliseconds (1sec = 1000ms)
+    delay *= (1/1000) #in milliseconds (1sec = 1000ms)
     delay = delay*(1/params.dt)# in time steps
     
     delay += 1
