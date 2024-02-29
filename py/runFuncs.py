@@ -13,7 +13,7 @@ c1d = continuum1d.continuum1d()
 
 def run_violation(params, fp):
     """
-    This functions determines whether the fixed point undergoes a instability under consideration of a spatial perturbation
+    This functions determines whether the fixed point 'fp' undergoes an instability under consideration of a spatial perturbation
     INPUT:
     :params: dicitionary of parameters to configure the model
     :fp: 2-entry array of [fixed_point(u_e), fixed_point(ui)]
@@ -101,6 +101,54 @@ def run_latencies(params):
     
     duration = 10
     dur_steps = int(duration * (1/ps.dt) * 1000)
+    signal = hilbert_trafo_nd(ue[-dur_steps:,:], axis=0)
+    phases = inst_phase(signal)
+    
+    phases_cut = phases[-80000:]
+    
+    phase_latencies = np.zeros(len(phases_cut.T))
+    
+    for idx, node in enumerate(phases_cut.T):
+        complex_vector = np.exp(1j * node)
+        
+        # Extract real and imaginary components of the complex vectors
+        real_part = np.real(complex_vector)
+        imaginary_part = np.imag(complex_vector)
+        
+        how_many_time_steps = getSwitchIndex(imaginary_part)
+        #print(how_many_time_steps[0])
+        if len(how_many_time_steps)<=1:
+            phase_latencies[idx] = 0
+        else:
+            #take the second switch to count the #time steps for a full cycle
+            phase_latencies[idx] = how_many_time_steps[1]
+        
+    rotation = rotation_in_latency(phase_latencies)
+    amount_of_nodes = count_nodes_for_descent(phase_latencies, rotation)
+    amount_time_steps = phase_latencies[np.argmax(phase_latencies)]
+    
+    print(r'$I_e=$' + '%.2f' %params.I_e + r'$\ and\ I_i=$' + '%.2f' %params.I_i)
+    print('time steps: ', amount_time_steps)
+    print('node steps: ', amount_of_nodes)
+        
+    return amount_time_steps, amount_of_nodes
+
+def run_latencies_for_activity(params, ue):
+
+    """
+     This function runs the entire computation to get the phase latency of a periodic traveling wave in the spatially 1d-model. 
+     INPUT:
+     :params: The parameters f your choice for which you want to simulate the activity.
+
+     OUTPUT: (here, only for the excitatory activity)
+     :amount_time_steps: a  integer that represents the counted amount of time steps it takes the activity to travel one full-cycle oscillation
+     :amount_of_nodes: an integer that represents the amound of nodes (i.e. the space)
+    """
+    
+    params = setParams(params)
+    
+    duration = 10
+    dur_steps = int(duration * (1/params.dt) * 1000)
     signal = hilbert_trafo_nd(ue[-dur_steps:,:], axis=0)
     phases = inst_phase(signal)
     
