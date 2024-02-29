@@ -59,7 +59,7 @@ def defaultParams():
     params.mu_a = 0.4
     
     #strength and time constant - to turn adaptation off: set b=0
-    params.b = 0.25 #0.5 - set it 0 until further notice (mostly to not accidentally run analysis with adaptation)
+    params.b = 0 #0.5 - set it 0 until further notice (mostly to not accidentally run analysis with adaptation)
     params.tau_a = 600
     
     # # - - - - # #
@@ -92,6 +92,11 @@ def defaultParams():
     params.length = 50 #length of spatial component [for delay computations assumed to be in mm]
     
     params.c = 10 #m/s velocity of activity in m/s
+    
+    #to enable the same initialisation, plant a seed:
+    params.seed = False
+    params.seed_amp = 0.1e-6
+    params.seed_func = 'kern'
     
     return params
     

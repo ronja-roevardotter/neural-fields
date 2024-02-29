@@ -1,6 +1,8 @@
 import numpy as np
 import pandas as pd
 
+from scipy.signal import correlate
+
 from py.twoD.params2d import setParams
 from py.twoD.analysis2d import computeFPs, checkFixPtsStability, a_jkValues, violationType
 from py.twoD.analysis2d import tr, det, lmbd
@@ -154,7 +156,104 @@ def collectStabilities(params=None, vary_params={'I_e': np.linspace(1,5,21), 'I_
 # # # # # # # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - # # # # # # # # #
 
 
+
 def collectPatterns(fp, params):
+    
+    """ This function collects the type of activity-pattern that is shown after running a simulation for different settings of parameters 
+    (fix given by params, varied in trng-df DataFrame) initialized in each available fixed point per parametrization. 
+    Pattern-Identification on basis of frequency over space and over time.
+    
+    INPUT:
+    :mtype: type of model, string, either 'activity' or 'voltage' 
+    :trng_df: pandas-DataFrame, column 1 and column 2 in trng_df are the parameters that were varied, 
+              there is one column that gives all available fixed points per parametrization, named 'fixed_points' 
+    :params: dictionary of fix parameters
+    :variables: dictionary of variables (duration, #pixels,  delta_t)
+    
+    OUTPUT:
+    :df: pandas-Dataframe with [varied_param1, varied_param2, patterns], where 'patterns' is a list of the same length as 'fixed_points' with numbers from 1-4, 
+    indicating the emerging pattern after initialising the model in the corresponding fixed point.
+    stationary=1
+    temporal=2
+    spatial=3
+    spatiotemporal=4
+    e.g. parametrization shows 3 fixed points, [fp1, fp2, fp3], init in fp1 shows spatial, in fp2 &fp3 stationary patterns => patterns=[3,1,1]"""
+    
+    ps = setParams(params)
+    
+    #for 2d I did setting the simulation duration & number of pictures during simulation extra 
+    #to ensure a high enough resolutionfor the pattern recognition - but I changed it back to being decided by the multiproc-run
+   
+  #  ps['end_t'] = 6*1000 #6 sekunden
+  #  ps['pic_nmb'] = 24 #4 Bilder pro Sekunde
+
+    if params.b==0:
+        itype = 'inte_fft'
+    else:
+        itype = 'inte_adaptation'
+    
+    exc, inh = c2d.run(ps, itype=itype, fp=fp)
+        
+    #the returned activity is returned in shape: rows per time step, len(row)=#of pixels (i.e. = #columns)
+    #we transpose that to have a matrix with one row per pixel, and coulmns=time steps.
+    x = exc[-1]
+    
+    #collect the last 8 images of activity
+    act_list = [exc[-1], exc[-2], exc[-3], exc[-4], exc[-5], 
+               exc[-6], exc[-7], exc[-8]]#, exc[-9], exc[-10]]
+    
+    #take the difference between the maximum and minimum value to determine whether there is change over space
+    diff = np.max(exc[-1])-np.min(exc[-1])
+    patterns = []
+
+    if diff < 0.1:
+        #check further, it it changes over time or not
+        for idx in range(1,len(act_list)):
+            act_corrs = []
+            for i in range(1,len(act_list)):
+                corr = correlate(act_list[i-1], act_list[i])
+                act_corrs.append(np.mean(corr))
+                
+            act_mean = np.mean(act_corrs)
+            mini = abs(act_mean)-np.min(act_corrs)
+            maxi = np.max(act_corrs)-abs(act_mean)
+            if abs(mini) < 1 and abs(maxi) < 1 :
+                #stationary
+                patterns.append(1)
+            else:
+                #temporal
+                patterns.append(2)
+        pattern = max(patterns)
+    elif diff >= 0.1:
+        for idx in range(1,len(act_list)):
+            act_corrs = []
+            for i in range(1,len(act_list)):
+                corr = correlate(act_list[i-1], act_list[i])
+                act_corrs.append(np.mean(corr))
+                
+            act_mean = np.mean(act_corrs)
+            mini = abs(act_mean)-np.min(act_corrs)
+            maxi = np.max(act_corrs)-abs(act_mean)
+            
+            if abs(mini) < 1 and abs(maxi) < 1 :
+                #stationary
+                patterns.append(3)
+            else:
+                #temporal
+                patterns.append(4)
+        pattern = max(patterns)
+    else:
+        mini = None
+        maxi = None
+        pattern = 0
+        
+    print('In pattern collection, pattern for I_e=%.3f, I_i=%.3f, we have act_diff=%.4f' %(ps['I_e'], ps['I_i'], diff))
+    print('and mini=%.3f, maxi=%.3f correlation differences from average' %(mini, maxi))
+        
+    return pattern #, Pxx_den_time, f_time, Pxx_den_spatial, f_space
+
+
+def collectPatterns_old(fp, params):
     
     """ This function collects the type of activity-pattern that is shown after running a simulation for different settings of parameters 
     (fix given by params, varied in trng-df DataFrame) initialized in each available fixed point per parametrization. 
@@ -188,8 +287,8 @@ def collectPatterns(fp, params):
     #for 2d I'm setting the simulation duration & number of pictures during simulation extra 
     #to ensure a high enough resolutionfor the pattern recognition.
    
-    ps['end_t'] = 8*1000 #5 sekunden
-    ps['pic_nmb'] = 80 #10 Bilder pro Sekunde
+    ps['end_t'] = 3*1000 #3 sekunden
+    ps['pic_nmb'] = 30 #10 Bilder pro Sekunde
     
     exc, inh = c2d.run(ps, itype=itype, fp=fp)
         
@@ -206,41 +305,45 @@ def collectPatterns(fp, params):
     reals = sigmoid(frequs.real)
     imags = sigmoid(frequs.imag)
     
-    abs_diff = np.max(np.log(abs(norm))) - np.min(np.log(abs(norm)))
+    abs_diff = np.max(np.log(np.abs(norm))) - np.min(np.log(np.abs(norm)))
     real_diff = np.max(reals) - np.min(reals)
     imag_diff = np.max(imags) - np.min(imags)
     
-    act_list = [exc[-1], exc[-5], exc[-10]]
+    amplitude = np.sqrt(reals**2 + imags**2)
+    amp_diff = np.max(amplitude) - np.min(amplitude)
+    
+    act_list = [exc[-1], exc[-3], exc[-5]]
     
     pattern = []
     #stationary or temporal (no change over space)
-    if real_diff<0.6 and imag_diff<0.1e-8:
+#    if real_diff<0.6 and imag_diff<0.1e-8:
+    if amp_diff < 0.7:
         #check further, it it changes over time or not
         for idx in range(1,3):
-            if (np.isclose(act_list[idx-1], act_list[idx], atol=0.1e-6)).all():
+            if (np.isclose(act_list[idx-1], act_list[idx], atol=0.1e-2)).all():
                 #stationary
                 pattern.append(1)
             else:
                 #temporal
                 pattern.append(2)
         pattern = max(pattern)
-    else:
+    elif amp_diff >= 0.7:
     #elif real_diff>0.8 and imag_diff>0.8:
         #check further, it it changes over time or not
         for idx in range(1,3):
-            if (np.isclose(act_list[idx-1], act_list[idx], atol=0.1e-6)).all():
+            if (np.isclose(act_list[idx-1], act_list[idx], atol=0.1e-2)).all():
                 #spatial
                 pattern.append(3)
             else:
                 #spatiotemporal
                 pattern.append(4)
         pattern = max(pattern)
-    #else:
-    #    pattern = 0
+    else:
+        pattern = 0
         
  #   print('In pattern collection, pattern: ', pattern)
         
-    return pattern #, Pxx_den_time, f_time, Pxx_den_spatial, f_space
+    return pattern
 
 
 def collectStabilities2(params=None, vary_params={'I_e': np.linspace(1,5,21), 'I_i': np.linspace(0,4,21)}, pattern_analysis=False):

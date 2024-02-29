@@ -1,6 +1,8 @@
 import numpy as np
 import scipy.signal as signal 
 
+#This py-file includes functions to process arrays, data, compute something. Some of them are rather specific, some are rather general, all of them are used at least once for analysis reasons.
+
 
 def getSwitchArray(array):
     """ returns the array at which positions the x-axis (have a zero) is crossed
@@ -17,8 +19,6 @@ def getSwitchArray(array):
     signs = np.sign(array)
     sign_switch_array = ((np.roll(signs, 1) - signs) != 0).astype(int)
     
- #   print('getSwitchArray returns this list: %s' %str(sign_switch_array))
-    
     return sign_switch_array
 
 def getSwitchIndex(array):
@@ -34,22 +34,32 @@ def getSwitchIndex(array):
     
     sign_switch_array = getSwitchArray(array)
     idx = np.where(sign_switch_array == 1)[0]
-    
-    if not idx.any():
-        idx = [0]
-    elif len(idx)>1 and idx[0]==0:
-        idx = idx[1:]
+
+    if len(idx) > 0 and idx[0] == 0:
+        #Find the first index greater than 0
+        first_non_zero_index = next((i for i, x in enumerate(idx) if x > 0), None)
+        if first_non_zero_index is not None:
+            idx = idx[first_non_zero_index:]
     
     return idx
 
 def getCommonElement(array1, array2):
+    """"
+    This function finds if array1 and array2 have an entry in common.
+    INPUT:
+    :array1: numpy array of elements
+    :array2: numpy array of elements
+
+    OUTPUT: 
+    :bool: True if yes, False if no.
+    """
+
     array1_set = set(array1)
     array2_set = set(array2)
     if (array1_set & array2_set):
         return True
     else:
         return False
-    
     
     
 
@@ -66,7 +76,7 @@ def getPSD(array, fs, maxfreq=300, nperseg = 1):
     :PSD_den: Power Spectrum Density (i.e. returns the power per frequency over the freqs array)
     """
     
-    freqs, Pxx_den = signal.welch(array, fs, window='hann', nperseg=int(nperseg*fs))
+    freqs, Pxx_den = signal.welch(array, fs, window='hann', nperseg=int(abs(nperseg*fs)))
     
     if maxfreq==None:
         maxfreq = max(freqs)
@@ -126,10 +136,28 @@ def getPosition(pixel_nmb, params):
     
     return position
 
+# e
+def normalize(arr, t_min, t_max):
+    """"
+    Explicit function to normalize array (for visualisation reasons - very helpful!)
+    INPUT:
+    :arr: one-dimensional numpy array of numerical values
+    :t_min, t_max: upper and lower bound of range into which arr shall be normalized
 
-            # # # - - -                                                                - - - # # # 
-# # # - - - The following functions were originally added to determine the phase & phase latencies - - - # # #
-            # # # - - -                                                                - - - # # # 
+    OUTPUT:
+    :norm_arr: normalized numpy array with min(norm_arr)=t_min, max(norm_arr)=t_max
+    """
+    norm_arr = []
+    diff = t_max - t_min
+    diff_arr = max(arr) - min(arr)
+    for i in arr:
+        temp = (((i - min(arr))*diff)/diff_arr) + t_min
+        norm_arr.append(temp)
+    return norm_arr
+
+# # # # # # # - - - - - - - - THE BELOW FUNCTIONS ARE USED TO COMPUTE PHASE lATENCIES IN A 1-DIMENSIONAL MODEL - - - - - - - - # # # # # # # 
+# # # - - - As of right now, the functions are used for spatiotemporal patterns of periodic traveling waves - - - # # #
+# # # - - - The pipeline, how it is done, is explained in a separate file (filename.py) - - - # # #
 
 def rotation_in_latency(array):
     """This function determines, based on the phase latency, into which direction the traveling waves rotate.
@@ -173,21 +201,18 @@ def count_nodes_for_descent(array, rotation):
     count = 0
     node = max_arg
     if rotation<0:
-        while array[node-1] < array[node]:
+        while array[node - 1] < array[node]:
             count += 1
-            node -= 1
-            node = int(node)
-            if node >= len(array)-1:
-                node = 0
+            node = int(node-1)
     else:
-        while array[node+1] < array[node]:
+        if node == len(array)-1:
+            node == -1
+        while array[(node + 1) % len(array)] < array[node]:
             count += 1
-            node += 1
-            node = int(node)
-            if node >= len(array)-1:
-                node = 0
+            node = (node + 1) % len(array)
+            
+    
     return count
-
 
 def hilbert_trafo_nd(signal, axis=0):
     """simply the call of the off-shelf implementation to not have to calculate it for every feature individually.
@@ -224,6 +249,7 @@ def inst_phase(signal):
     
     return inst_phase
 
+
 def inst_frequ(signal):
     """ This function is supposed to determine the instantaneous frequency of a real-valued signal. 
     We use the method from Muller et al (2014), DOI: 10.1038/ncomms4675.
@@ -252,18 +278,59 @@ def inst_frequ(signal):
     inst_frequ = inst_frequ_temp[:-1]
     
     return inst_frequ
+
+
+
+# # # - - END of PHASE LATENCY functions - - - # # #
+
+# # # # # - - - - - Below you can find the two functions rateBatches1d, rateBatchesNd, that determine the average rate of change of an activity u - - - - - # # # # #
+# # # - - - IMPORTANT NOTE: rateBatches1d can also be generally used to compute the avg. finite differences in an array between index and index+batch_size - - - # # #
+# # # - - - IMPORTANT NOTE: Thi also applies to rateBatchesNd for n-dimensional arrays - - - # # #
+
+
+def rateBatches1d(array, batch_size=100):
+    """"
+    This function computes the average rate of change of activity of the activity-array u over space and over time.
+    It does so by taking the finite difference of each activity entry u_ij at position i, time j, to u_i(j+batch_size) w.r.t. \Delta t
+    INPUT:
+    :u: n-dim with shape=(#timesteps, #nodes) activity array (numpy), important note: the transient time should be cut of, otherwise it affects the result.
+    :batch_size: integer, how large the batch is that you take for the finite-differences
+
+    OUTPUT:
+    :avg_rate: float, average rate of change in activity in u over time and space
+
+    """
+    batch_number = int(len(array)/batch_size)
+    rate_per_batch = np.zeros(batch_number)
     
+    for i in range(batch_number):
+        rate_per_batch[i] = np.abs((array[int(i+batch_size)] - array[i]) / batch_size)
+        
+    avg_rate = np.mean(rate_per_batch)
+    
+    return avg_rate
 
-# explicit function to normalize array (for visualisation reasons - very helpful!)
-def normalize(arr, t_min, t_max):
-    norm_arr = []
-    diff = t_max - t_min
-    diff_arr = max(arr) - min(arr)
-    for i in arr:
-        temp = (((i - min(arr))*diff)/diff_arr) + t_min
-        norm_arr.append(temp)
-    return norm_arr
+def rateBatchesNd(u, batch_size=100):
+    """"
+    This function computes the average rate of change of activity of the activity-array u over space and over time.
+    It does so by taking the finite difference of each activity entry u_ij at position i, time j, to u_i(j+batch_size) w.r.t. \Delta t
+    INPUT:
+    :u: n-dim with shape=(#timesteps, #nodes) activity array (numpy), important note: the transient time should be cut of, otherwise it affects the result.
+    :batch_size: integer, how large the batch is that you take for the finite-differences
 
+    OUTPUT:
+    :avg_rate: float, average rate of change in activity in u over time and space
+    """
 
-
-
+    #IMPORTANT: the array u is already with cut-off transient time!!!
+    node_number = u.shape[-1] #to identify, how many nodes I have in my space
+    rate_batches_per_node = np.zeros(node_number)
+    
+    for i in range(node_number):
+        rate_batches_per_node[i] = rateBatches1d(u.T[i], batch_size)
+        
+   # print(rate_batches_per_node)
+        
+    avg_rate = np.mean(rate_batches_per_node)
+    
+    return avg_rate
