@@ -1,17 +1,20 @@
 import numpy as np
 import pandas as pd
 
-from py.params import setParams
-from py.analysis import computeFPs, checkFixPtsStability, a_jkValues, violationType
-from py.analysis import tr, det, lmbd
+import sys
+sys.path.append('/Users/ronja/Documents/GitHub/neural-fields/py')
 
-from py.turings import checkStability
+from params import setParams
+from analysis import computeFPs, checkFixPtsStability, a_jkValues, violationType
+from analysis import tr, det, lmbd
 
-from py.funcs import getAvgPSD
+from turings import checkStability
 
-from py.kernels import gaussian, exponential
+from funcs import getAvgPSD
 
-import py.continuum1d as continuum1d
+from kernels import gaussian, exponential
+
+import continuum1d as continuum1d
 
 c1d = continuum1d.continuum1d()
 

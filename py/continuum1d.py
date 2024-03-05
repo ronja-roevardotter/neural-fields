@@ -1,8 +1,11 @@
 #import necessary packages
 import numpy as np
 
-from py.integration import runIntegration
-from py.params import setParams
+import sys
+sys.path.append('/Users/ronja/Documents/GitHub/neural-fields/py')
+
+from integration import runIntegration
+from params import setParams
 
 import os
 
@@ -72,7 +75,7 @@ class continuum1d:
         print('1d Model initialised.')
         
         
-    def run(self, params=None, fp=np.array([0.0, 0.01]), itype='inte_fft'):
+    def run(self, params=None, fp=np.array([0.0, 0.01]), itype='integrate_conv'):
         self.params = setParams(params)
         
         #itype determines the type of integration; string

@@ -1,16 +1,22 @@
 import numpy as np
 
-import py.twoD.kernels2d as ks
+#get the paths to be able to import functions
+%cd /Users/ronja/Documents/GitHub/neural-fields
+
+import sys
+sys.path.append('/Users/ronja/Documents/GitHub/neural-fields/py')
+
+import twoD.kernels2d as ks
 
 #import root and eigenvalue/-vector function
 from scipy.optimize import root
 from scipy.linalg import eigvals
 
-from py.twoD.params2d import setParams
+from twoD.params2d import setParams
 
-from py.twoD.analysis2d import F_e, F_i, F_a, derivF_e, derivF_i, derivF_a
-from py.twoD.analysis2d import a_jkValues, f_kernel
-from py.funcs import getSwitchArray, getSwitchIndex, getCommonElement
+from twoD.analysis2d import F_e, F_i, F_a, derivF_e, derivF_i, derivF_a
+from twoD.analysis2d import a_jkValues, f_kernel
+from funcs import getSwitchArray, getSwitchIndex, getCommonElement
 
 
 # # # - - - # # # - - - adaptation matrix A(k)\in\mathbb{C}^{3\times3} - - - # # # - - - # # #

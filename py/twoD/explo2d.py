@@ -3,17 +3,20 @@ import pandas as pd
 
 from scipy.signal import correlate
 
-from py.twoD.params2d import setParams
-from py.twoD.analysis2d import computeFPs, checkFixPtsStability, a_jkValues, violationType
-from py.twoD.analysis2d import tr, det, lmbd
+import sys
+sys.path.append('/Users/ronja/Documents/GitHub/neural-fields/py')
 
-from py.twoD.turings2d import checkStability
+from twoD.params2d import setParams
+from twoD.analysis2d import computeFPs, checkFixPtsStability, a_jkValues, violationType
+from twoD.analysis2d import tr, det, lmbd
 
-from py.funcs import getAvgPSD
+from twoD.turings2d import checkStability
 
-from py.twoD.kernels2d import gaussian
+from funcs import getAvgPSD
 
-import py.twoD.continuum2d as continuum2d
+from twoD.kernels2d import gaussian
+
+import twoD.continuum2d as continuum2d
 
 c2d = continuum2d.continuum2d()
 

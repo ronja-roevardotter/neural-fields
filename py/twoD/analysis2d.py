@@ -1,12 +1,15 @@
 import numpy as np
 
-import py.twoD.kernels2d as ks
+import sys
+sys.path.append('/Users/ronja/Documents/GitHub/neural-fields/py')
+
+import twoD.kernels2d as ks
 
 #import root and eigenvalue/-vector function
 from scipy.optimize import root
 from scipy.linalg import eigvals
 
-from py.twoD.params2d import setParams
+from twoD.params2d import setParams
 
         
  # # # - - - # # # - - - - - - - - - - - - - - - - - - - # # # - - - # # #

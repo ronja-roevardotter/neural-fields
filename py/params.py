@@ -1,5 +1,9 @@
 import numpy as np
-import py.kernels as ks
+
+import sys
+sys.path.append('/Users/ronja/Documents/GitHub/neural-fields/py')
+
+import kernels as ks
 
 """
 Note: any function here can be called speratly, but one has to use a dotdict-dictionary to call the functions and know, which parameters are used for computations.
@@ -59,7 +63,7 @@ def defaultParams():
     params.mu_a = 0.4
     
     #strength and time constant - to turn adaptation off: set b=0
-    params.b = 0 #0.5 - set it 0 until further notice (mostly to not accidentally run analysis with adaptation)
+    params.b = 0.25 #0.5 - set it 0 until further notice (mostly to not accidentally run analysis with adaptation)
     params.tau_a = 600
     
     # # - - - - # #

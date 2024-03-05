@@ -1,12 +1,15 @@
 import numpy as np
 
-import py.kernels as ks
+import sys
+sys.path.append('/Users/ronja/Documents/GitHub/neural-fields/py')
+
+import kernels as ks
 
 #import root and eigenvalue/-vector function
 from scipy.optimize import root
 from scipy.linalg import eigvals
 
-from py.params import setParams
+from params import setParams
 
         
  # # # - - - # # # - - - - - - - - - - - - - - - - - - - # # # - - - # # #

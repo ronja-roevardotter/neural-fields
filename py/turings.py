@@ -1,16 +1,19 @@
 import numpy as np
 
-import py.kernels as ks
+import sys
+sys.path.append('/Users/ronja/Documents/GitHub/neural-fields/py')
+
+import kernels as ks
 
 #import root and eigenvalue/-vector function
 from scipy.optimize import root
 from scipy.linalg import eigvals
 
-from py.params import setParams
+from params import setParams
 
-from py.analysis import F_e, F_i, F_a, derivF_e, derivF_i, derivF_a
-from py.analysis import a_jkValues, f_kernel
-from py.funcs import getSwitchArray, getSwitchIndex, getCommonElement
+from analysis import F_e, F_i, F_a, derivF_e, derivF_i, derivF_a
+from analysis import a_jkValues, f_kernel
+from funcs import getSwitchArray, getSwitchIndex, getCommonElement
 
 
 # # # - - - # # # - - - adaptation matrix A(k)\in\mathbb{C}^{3\times3} - - - # # # - - - # # #

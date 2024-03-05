@@ -1,8 +1,11 @@
 #import necessary packages
 import numpy as np
 
-from py.twoD.integration2d import runIntegration
-from py.twoD.params2d import setParams
+import sys
+sys.path.append('/Users/ronja/Documents/GitHub/neural-fields/py')
+
+from twoD.integration2d import runIntegration
+from twoD.params2d import setParams
 
 import os
 

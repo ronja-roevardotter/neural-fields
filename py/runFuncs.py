@@ -1,13 +1,15 @@
 #This py-file contains the 'run functions', i.e. the functions used to run certain pipelines, e.g. the pipeline for phase latencies
 import numpy as np
 
+import sys
+sys.path.append('/Users/ronja/Documents/GitHub/neural-fields/py')
 
-from py.funcs import count_nodes_for_descent, getSwitchIndex, hilbert_trafo_nd, inst_phase, rotation_in_latency
-from py.params import setParams
-from py.analysis import a_jkValues, violationType, checkFixPtsStability, computeFPs
-from py.turings import checkStability
+from funcs import count_nodes_for_descent, getSwitchIndex, hilbert_trafo_nd, inst_phase, rotation_in_latency
+from params import setParams
+from analysis import a_jkValues, violationType, checkFixPtsStability, computeFPs
+from turings import checkStability
 
-import py.continuum1d as continuum1d
+import continuum1d as continuum1d
 c1d = continuum1d.continuum1d()
 
 
@@ -69,7 +71,7 @@ def run_activity(params, itype='integrate_conv', fp=np.array([0.0, 0.01])):
     """
 
     params = setParams(params)    
-    ue, ui = c1d.run(params, itype='integrate_conv', fp=fp)
+    ue, ui = c1d.run(params, itype=itype, fp=fp)
     
     return ue, ui
 
