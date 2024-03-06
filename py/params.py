@@ -95,6 +95,9 @@ def defaultParams():
     #choose spatial boundaries (intervals of spatial spread)
     params.length = 50 #length of spatial component [for delay computations assumed to be in mm]
     
+    #delay parameters:  1. delayed -> to indicate if delays shalle be turned on (True) or not (False)
+    #                   2. c -> velocity of activity (in whatever unit you want to define everything)
+    params.delayed = False
     params.c = 10 #m/s velocity of activity in m/s
     
     #to enable the same initialisation, plant a seed:
@@ -195,10 +198,10 @@ def setDelay(params):
     d_syn = 0.3 #in [m/s] minimum synaptic delay - one can set delay=d_syn+(|x-y|/c)
     
     delay_x = abs(params.x) #assume distance in mm and velocity in m/s -> transform c into mm/s by multiplying with 1000
-    params.c *= 1000 #ommitable, if transformation into ms happens as well - m/s=mm/ms !!
+ #   params.c *= 1000 #ommitable, if transformation into ms happens as well - m/s=mm/ms !!
     delay = delay_x*(1/params.c) # in seconds
     
-    delay *= (1/1000) #in milliseconds (1sec = 1000ms)
+ #   delay *= (1/1000) #in milliseconds (1sec = 1000ms)
     delay = delay*(1/params.dt)# in time steps
     
     delay += 1

@@ -64,6 +64,7 @@ def runIntegration(params, fp=np.array([0.0, 0.01]), itype='inte_fft',):
     ke_fft = params.ke_fft
     ki_fft = params.ki_fft
     
+    delayed = params.delayed
     delay = params.delay
     
     seed =  params.seed
@@ -110,7 +111,7 @@ def runIntegration(params, fp=np.array([0.0, 0.01]), itype='inte_fft',):
                         beta_e, beta_i, mu_e, mu_i,
                         I_e, I_i,
                         beta_a, mu_a, b, tau_a, adaps_init,
-                        dt, time, delay, 
+                        dt, time, delayed, delay, 
                         n, length, c, x, dx, 
                         ke, ki, ke_fft, ki_fft,
                         ue_init, ui_init)
@@ -127,7 +128,7 @@ def integrate_conv(mtype,
              beta_e, beta_i, mu_e, mu_i,
              I_e, I_i,
              beta_a, mu_a, b, tau_a, adaps, 
-             dt, time, delay, 
+             dt, time, delayed, delay, 
              n, length, c, x, dx, 
              ke, ki, ke_fft, ki_fft,
              ue, ui):
@@ -141,25 +142,30 @@ def integrate_conv(mtype,
     def Fa(x):
         return 1/(1+np.exp(-beta_a*(x-mu_a)))
     
-    d_max = max(delay)
+    if delayed:
+        d_max = max(delay)
+    else:
+        d_max = len(time)
     
     ke_fft = np.fft.fft(ke)
     ki_fft = np.fft.fft(ki)
     
     for t in range(1,int(len(time))): 
         
-        #indeces for delays - makes the delayed time steps easier to call
+        #indeces for delays ('how far back in time - index') - makes the delayed time steps easier to call
         indeces = np.array([t*np.ones(n)-delay]).astype(int)
+        #per node, i.e. node 0 has delay 1 -> call ue[t-1,0], node 1 has delay 2 -> call ue[t-2, 1] etc.
+        node_indeces = np.linspace(0,n-1,n).astype(int)
         
         if mtype=='activity':
-            if t<=len(time):#d_max+1: #len(time): 
+            if t<=d_max+1: #len(time): 
                 ve = np.fft.fft(ue[t-1])
                 vi = np.fft.fft(ui[t-1])
             else:
-                temp_e = ue[indeces,0]
-                temp_i = ui[indeces,0]
-                ve = np.fft.fft(temp_e)[0]
-                vi = np.fft.fft(temp_i)[0]
+                temp_e = ue[indeces,node_indeces]
+                temp_i = ui[indeces,node_indeces]
+                ve = np.fft.fft(temp_e)#[0]
+                vi = np.fft.fft(temp_i)#[0]
         else:
             ve = np.fft.fft(Fe(ue[t-1]))
             vi = np.fft.fft(Fi(ui[t-1]))
