@@ -1,0 +1,22 @@
+Basically nothing is done for the 2-dimensional model except for the integration & stability analysis (with and without adaptation). 
+The following points are just first thoughts of what has to be done:
+
+    - pattern recognition
+        -> adjust the thresholds that determine whether it is a bump-solution or a spatiotemporal pattern
+        -> other option: make sure, that the images compared underlie always the same time-interval (always 10 images for the last second or so)
+    - coarse vs. fine discretization 
+        -> what it the minimal discretization necessary to avoid discretization effects?
+        -> kernel-size in relation to sheet-size
+    - research
+        -> what have others found under which circumstances?
+        -> how did they analyse it?
+        -> pattern detection (Roberts et al, Townsend et al, ...)
+    
+    - [...]
+    - delays
+    - noise
+    - shape, size, units of sheet
+    - boundary conditions
+    - heterogeneous connectivity profile
+
+NEVER FORGET: # # - - DOCUMENTATION - - # #

@@ -1,0 +1,16 @@
+Generally - a lot has been done and is fully working. The following points are not to be forgotten though:
+
+    - boundary conditions, i.e. line instead of ring-architecture
+    - heterogeneous connectivity profile?
+    - Ih-current instead of adaptation for SOs? (see, Levenstein et al 2024)
+    - traveling wave-solutions? (see, Coombes 2005)
+    - classification if limit cycles 
+    - loss of stability for polynomial inequalities (e.g. c1c2>c0 for this and that condition....)
+    - noise
+    - get rid of computations inside of toy-notebooks!
+    - simplify call for csv-files for the same visualisation in adaps-toy-notebook
+    - include everything you've done in your ParameterExploration.tex for documentation including methods- and pipeline details
+    - clean up csv-file-chaos
+    - clean-up notebook-chaos
+    - clean, and detailed delay-testing + feature extraction
+    - order of delays should make more sense! It's confusing as it is right now.
