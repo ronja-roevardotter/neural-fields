@@ -101,8 +101,7 @@ def defaultParams():
     
     #option to set specific seeds for initialisation - simplifies the testing
     params.seed = False
-    params.seed_amp = 0.1e-6
-    params.seed_func = 'kern'
+    params.seed_amp = 0.1e-2
     
     
     return params

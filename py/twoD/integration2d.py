@@ -1,13 +1,22 @@
 import numpy as np
 
+def kernSeed(fp, kernel, seed_amp, thresh):
+    init = np.where(kernel>thresh, kernel, 0)
+    init_avg = np.mean(init)
+    init = np.where(init>init_avg, init, init*(-1))
+    ones = np.where(init==0, init, 1)
+    init = ones*fp + init*seed_amp
+
+    return init
+
 def alternatingSeed(array, seed_amp):
     array[1::2, :] -= seed_amp
     array[::2, :] += seed_amp
     return array
 
-def kernSeed(array, kernel, seed_amp):
-    array += kernel*seed_amp
-    return array
+#def kernSeed(array, kernel, seed_amp):
+#    array += kernel*seed_amp
+#    return array
 
 
 def runIntegration(params, fp=np.array([0.0, 0.01]), itype='inte_fft',):
@@ -77,9 +86,7 @@ def runIntegration(params, fp=np.array([0.0, 0.01]), itype='inte_fft',):
     
     seed =  params.seed
     seed_amp =  params.seed_amp
-    seed_func = params.seed_func 
         
-    
     if all(comparison):
         init_exc = fp
         init_inh = fp
@@ -91,22 +98,13 @@ def runIntegration(params, fp=np.array([0.0, 0.01]), itype='inte_fft',):
         init_adaps = [a_fp-0.1*(10**(-10)), a_fp+0.1*(10**(-10))]
     
     if seed and not all(comparison): 
-        ue_init=np.ones(ke.shape)*fp[0]
-        ui_init=np.ones(ki.shape)*fp[1]
-        adaps_init=np.ones(ke.shape)*(1/(1+np.exp(-beta_a*(fp[0]-mu_a))))
+        thresh = 0.1e-15
+        ue_init = kernSeed(fp[0], ke, seed_amp, thresh)
+        ui_init = kernSeed(fp[1], ki, seed_amp, thresh)
 
-        if seed_func == 'sinus':
-            ue_init = alternatingSeed(ue_init, seed_amp)
-            ui_init = alternatingSeed(ui_init, seed_amp)
-            adaps_init = alternatingSeed(adaps_init, seed_amp)
-        
-            ue_init = alternatingSeed(ue_init.T, seed_amp)
-            ui_init = alternatingSeed(ui_init.T, seed_amp)
-            adaps_init = alternatingSeed(adaps_init.T, seed_amp)
-        elif seed_func == 'kern':
-            ue_init = kernSeed(ue_init, ke, seed_amp)
-            ui_init = kernSeed(ui_init, ki, seed_amp)
-            adaps_init = kernSeed(adaps_init, ke, seed_amp)
+        adaps_fp = (1/(1+np.exp(-beta_a*(fp[0]-mu_a))))
+        adaps_kernel = np.ones(ke.shape)*adaps_fp
+        adaps_init = kernSeed(adaps_fp, adaps_kernel, seed_amp, thresh)
             
     else:
         #the initialisation I have to make to start the integration
@@ -281,7 +279,7 @@ def inte_adaptation(mtype,
             ue_out.append(ue_new.copy())
             ui_out.append(ui_new.copy())
             adaps_out.append(adaps_new.copy())
-            print('Round t=%i with ue-shape=%s' %(int(t),str(ue_new.shape)))
+         #   print('Round t=%i with ue-shape=%s' %(int(t),str(ue_new.shape)))
             
         ue_old = ue_new
         ui_old = ui_new
