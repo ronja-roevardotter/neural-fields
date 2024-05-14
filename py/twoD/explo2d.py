@@ -4,7 +4,7 @@ import pandas as pd
 from scipy.signal import correlate
 
 import sys
-sys.path.append('/Users/ronja/Documents/GitHub/neural-fields/py')
+sys.path.append('/Users/ronja/Documents/GitHub/neural-fields-local/py')
 
 from twoD.params2d import setParams
 from twoD.analysis2d import computeFPs, checkFixPtsStability, a_jkValues, violationType
@@ -160,7 +160,7 @@ def collectStabilities(params=None, vary_params={'I_e': np.linspace(1,5,21), 'I_
 
 
 
-def collectPatterns(fp, params):
+def collectPatterns(fp, params, ue=None):
     
     """ This function collects the type of activity-pattern that is shown after running a simulation for different settings of parameters 
     (fix given by params, varied in trng-df DataFrame) initialized in each available fixed point per parametrization. 
@@ -182,7 +182,7 @@ def collectPatterns(fp, params):
     spatiotemporal=4
     e.g. parametrization shows 3 fixed points, [fp1, fp2, fp3], init in fp1 shows spatial, in fp2 &fp3 stationary patterns => patterns=[3,1,1]"""
     
-    ps = setParams(params)
+    params = setParams(params)
     
     #for 2d I did setting the simulation duration & number of pictures during simulation extra 
     #to ensure a high enough resolutionfor the pattern recognition - but I changed it back to being decided by the multiproc-run
@@ -195,7 +195,10 @@ def collectPatterns(fp, params):
     else:
         itype = 'inte_adaptation'
     
-    exc, inh = c2d.run(ps, itype=itype, fp=fp)
+    if ue!=None:
+        exc = ue
+    else:
+        exc, inh = c2d.run(params, itype=itype, fp=fp)
         
     #the returned activity is returned in shape: rows per time step, len(row)=#of pixels (i.e. = #columns)
     #we transpose that to have a matrix with one row per pixel, and coulmns=time steps.
@@ -210,48 +213,49 @@ def collectPatterns(fp, params):
     patterns = []
 
     if diff < 0.1:
+        act_corrs = []
         #check further, it it changes over time or not
         for idx in range(1,len(act_list)):
-            act_corrs = []
-            for i in range(1,len(act_list)):
-                corr = correlate(act_list[i-1], act_list[i])
-                act_corrs.append(np.mean(corr))
+            corr = correlate(act_list[idx-1], act_list[idx])
+            act_corrs.append(np.mean(corr))
                 
-            act_mean = np.mean(act_corrs)
-            mini = abs(act_mean)-np.min(act_corrs)
-            maxi = np.max(act_corrs)-abs(act_mean)
-            if abs(mini) < 1 and abs(maxi) < 1 :
-                #stationary
-                patterns.append(1)
-            else:
-                #temporal
-                patterns.append(2)
+        act_mean = np.mean(act_corrs)
+        mini = abs(act_mean)-np.min(act_corrs)
+        maxi = np.max(act_corrs)-abs(act_mean)
+        if abs(mini) < 0.1e-4 and abs(maxi) < 0.1e-4 :
+            #stationary
+            patterns.append(1)
+        else:
+            #temporal
+            patterns.append(2)
         pattern = max(patterns)
     elif diff >= 0.1:
-        for idx in range(1,len(act_list)):
-            act_corrs = []
-            for i in range(1,len(act_list)):
-                corr = correlate(act_list[i-1], act_list[i])
-                act_corrs.append(np.mean(corr))
+        act_corrs = []
+        for i in range(1,len(act_list)):
+            corr = correlate(act_list[i-1], act_list[i])
+            act_corrs.append(np.mean(corr))
+            print('for spatial, cross correlation betwen image i=%i and i-1=%i is %s' %(i, int(i-1), str(act_corrs)))
                 
-            act_mean = np.mean(act_corrs)
-            mini = abs(act_mean)-np.min(act_corrs)
-            maxi = np.max(act_corrs)-abs(act_mean)
+        act_mean = np.mean(act_corrs)
+        mini = abs(act_mean)-np.min(act_corrs)
+        maxi = np.max(act_corrs)-abs(act_mean)
+        print('for spatial, average of cross correlation is ', act_mean)
             
-            if abs(mini) < 1 and abs(maxi) < 1 :
-                #stationary
-                patterns.append(3)
-            else:
-                #temporal
-                patterns.append(4)
+        if abs(mini) < 0.1e-4 and abs(maxi) < 0.1e-4 :
+            #stationary
+            patterns.append(3)
+        else:
+            #temporal
+            patterns.append(4)
+
         pattern = max(patterns)
     else:
         mini = None
         maxi = None
         pattern = 0
         
-    print('In pattern collection, pattern for I_e=%.3f, I_i=%.3f, we have act_diff=%.4f' %(ps['I_e'], ps['I_i'], diff))
-    print('and mini=%.3f, maxi=%.3f correlation differences from average' %(mini, maxi))
+    print('In pattern collection, pattern for I_e=%.3f, I_i=%.3f, we have act_diff=%.4f' %(params['I_e'], params['I_i'], diff))
+    print('and mini=%.6f, maxi=%.6f correlation differences from average' %(mini, maxi))
         
     return pattern #, Pxx_den_time, f_time, Pxx_den_spatial, f_space
 

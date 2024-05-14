@@ -100,7 +100,7 @@ def defaultParams():
     params.pic_nmb = 10
     
     #option to set specific seeds for initialisation - simplifies the testing
-    params.seed = False
+    params.seed = -1 #what type of seed is wished for: -1==no seed, 0==kernel, >0==random.number.generator.seed
     params.seed_amp = 0.1e-2
     
     

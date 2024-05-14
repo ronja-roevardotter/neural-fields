@@ -1,10 +1,7 @@
 import numpy as np
 
-#get the paths to be able to import functions
-%cd /Users/ronja/Documents/GitHub/neural-fields
-
 import sys
-sys.path.append('/Users/ronja/Documents/GitHub/neural-fields/py')
+sys.path.append('/Users/ronja/Documents/GitHub/neural-fields-local/py')
 
 import twoD.kernels2d as ks
 

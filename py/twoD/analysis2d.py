@@ -1,7 +1,7 @@
 import numpy as np
 
 import sys
-sys.path.append('/Users/ronja/Documents/GitHub/neural-fields/py')
+sys.path.append('/Users/ronja/Documents/GitHub/neural-fields-local/py')
 
 import twoD.kernels2d as ks
 

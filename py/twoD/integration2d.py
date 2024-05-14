@@ -14,9 +14,18 @@ def alternatingSeed(array, seed_amp):
     array[::2, :] += seed_amp
     return array
 
-#def kernSeed(array, kernel, seed_amp):
-#    array += kernel*seed_amp
-#    return array
+def jitteredSeed(shape, fixed_value, jitter_std, seed=None):
+    # Set the seed for reproducibility
+    if seed is not None:
+        np.random.seed(seed)
+    
+    # Generate random numbers with a normal distribution around 0
+    noise = np.random.normal(loc=0, scale=jitter_std, size=shape)
+    # Add the fixed value to the noise
+    jittered_array = fixed_value + noise
+    return jittered_array 
+
+
 
 
 def runIntegration(params, fp=np.array([0.0, 0.01]), itype='inte_fft',):
@@ -97,14 +106,25 @@ def runIntegration(params, fp=np.array([0.0, 0.01]), itype='inte_fft',):
         init_inh = [fp[1]-0.1*(10**(-10)), fp[1]+0.1*(10**(-10))]
         init_adaps = [a_fp-0.1*(10**(-10)), a_fp+0.1*(10**(-10))]
     
-    if seed and not all(comparison): 
-        thresh = 0.1e-15
-        ue_init = kernSeed(fp[0], ke, seed_amp, thresh)
-        ui_init = kernSeed(fp[1], ki, seed_amp, thresh)
+    if seed>=0 and not all(comparison): 
 
-        adaps_fp = (1/(1+np.exp(-beta_a*(fp[0]-mu_a))))
-        adaps_kernel = np.ones(ke.shape)*adaps_fp
-        adaps_init = kernSeed(adaps_fp, adaps_kernel, seed_amp, thresh)
+        if seed==0:
+            thresh = 0.1e-15
+            ue_init = kernSeed(fp[0], ke, seed_amp, thresh)
+            ui_init = kernSeed(fp[1], ki, seed_amp, thresh)
+
+            adaps_fp = (1/(1+np.exp(-beta_a*(fp[0]-mu_a))))
+            adaps_kernel = np.ones(ke.shape)*adaps_fp
+            adaps_init = kernSeed(adaps_fp, adaps_kernel, seed_amp, thresh)
+        elif seed>0:
+            shape = ke.shape
+            fixed_value = 10  # The fixed value around which the jitter will be added
+            std = 0.1e-2    # Standard deviation of the jitter
+            # Generate the jittered array
+            ue_init = jitteredSeed(shape, fp[0], std, seed) 
+
+
+            adaps_fp = (1/(1+np.exp(-beta_a*(fp[0]-mu_a))))
             
     else:
         #the initialisation I have to make to start the integration
