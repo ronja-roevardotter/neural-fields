@@ -346,7 +346,7 @@ def runOpticalFlow(data, alpha=0.1, beta=10, nSteps=100,
     #set parameters X, Y, T, initialise vx & vy
     xdim = data.shape[0]
     ydim = data.shape[1]
-    tdim = data.shape[2]
+    tdim = data.shape[2] -1 #omit last time step for partial detivative approximations
 
     vx = np.zeros((xdim, ydim, tdim))
     vy = np.zeros((xdim, ydim, tdim))
@@ -359,7 +359,7 @@ def runOpticalFlow(data, alpha=0.1, beta=10, nSteps=100,
             data = abs(data)
 
     #iterate over all time steps, except t=tdim, since we can not compute the partial derivatives there
-    for t in range(0, tdim-1):
+    for t in range(0, tdim):
 
         #determine the spatial derives at time step t
         Dx, Dy = spatialPartialDerivative(data[:,:,t], data[:,:,int(t+1)])

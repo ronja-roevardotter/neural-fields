@@ -60,7 +60,7 @@ def findContourPaths(array):
     :array: nxm-dimensional arrat of scalar values
 
     OUTPUT:
-    :contours: pyplot-object that contains every contour line found in array
+    :contours: every contour line found in array, (pyplot path object, list)
     """
 
     #Define the levels for contour-lines
@@ -124,7 +124,6 @@ def criticalPoints(contourMatrix):
 
     return criticalPoints
 
-import numpy as np
 
 def classifyCriticalPoints(rowcoords, colcoords, u, v):
     """
@@ -202,7 +201,7 @@ def avgNormVelocity(u, v):
     OUTPUT:
     :phi_t: the averaged normalized velocity at time step t, nxm-dimensional array
     """
-
+    
     #first, compute the velocities over the field based on the x- and y-components u & v
     w = np.sqrt( u ** 2 + v ** 2)
 
@@ -212,4 +211,29 @@ def avgNormVelocity(u, v):
     phi_t = nominator/denominator
     
     return phi_t
+
+def sequentialAvgNormVelocity(us, vs):
+    """"
+    Determine the average order paramter phi over a time series of velocity vector fields in x- (i.e. us) and y- (i.e. vs) component.
+
+    INPUT:
+    :us, vs: time series of x- and y-component vvfs (T x X x Y)-dimensional, array of arrays
+
+    OUTPUT:
+    :phi: average over time of average normalized veloity per time frame 
+    """
+    phis = np.zeros(len(us))
+    count = 0
+
+    for u, v in zip(us, vs):
+        phi_t = avgNormVelocity(u, v)
+        phis[count] = phi_t
+        count+=1
+
+    phi = np.mean(phis)
+
+    return phi
+
+
+# # # # # - - - - - Properties - - - - - # # # # #
 
