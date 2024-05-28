@@ -3,9 +3,30 @@ import matplotlib.pyplot as plt
 
 import pandas as pd
 
-from vvf.opticalFlow import runOpticalFlow
-from vvf.patternDetection import findContourPaths, contourMatrix, classifyCriticalPoints, avgNormVelocity, sequentialAvgNormVelocity
-from vvf.spatiotemporalModes import concatenateReal, concatenateComplex, singularVectorDecomposition, proportionOfVariance, reshapeSpatialModes
+import sys
+import os
+
+cdir = os.getcwd() #get current directory
+os.chdir(cdir) #make sure you are in the current directory
+
+#mother directory (i.e. one folder 'above')
+mother_dir = os.path.abspath(os.path.join(cdir, os.pardir))
+#verify  mother directory
+print(f"Mother directory {mother_dir} given")
+
+#get the path to the py directory
+py_dir = os.path.abspath(os.path.join(os.getcwd(), '..', 'py'))
+#add the py directory to the system path
+if py_dir not in sys.path:
+    sys.path.append(py_dir)
+
+#verify the directory has been added
+print(f"Added {py_dir} to sys.path")
+print(f"System path: {sys.path}")
+
+from opticalFlow import runOpticalFlow
+from patternDetection import findContourPaths, contourMatrix, classifyCriticalPoints, avgNormVelocity, sequentialAvgNormVelocity
+from spatiotemporalModes import concatenateReal, concatenateComplex, singularVectorDecomposition, proportionOfVariance, reshapeSpatialModes
 
 #Import the 2-dimensional model
 import twoD.continuum2d as continuum2d
@@ -16,11 +37,6 @@ from twoD.params2d import setParams
 
 #import from twoD-folder the functions to determine the fixed points, their stability and whether they undergo a violation 
 from twoD.analysis2d import computeFPs
-
-import sys
-sys.path.append('/Users/ronja/Documents/GitHub/neural-fields-local/py')
-csv_path = '/Users/ronja/Documents/GitHub/neural-fields-local/csv'
-sys.path.append(csv_path)
 
 def runProperties(data):
 

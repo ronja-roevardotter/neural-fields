@@ -1,5 +1,5 @@
 import numpy as np
-import py.twoD.kernels2d as ks
+import twoD.kernels2d as ks
 
 """
 Note: any function here can be called speratly, but one has to use a dotdict-dictionary to call the functions and know, which parameters are used for computations.
